@@ -1,0 +1,9 @@
+{
+    "development": {
+      "username": "postgres",
+      "password": "Admin",
+      "database": "zaid_invespy",
+      "host": "localhost",
+      "dialect": "postgres"
+    }
+  }
