@@ -33,7 +33,7 @@ app.use(cookieParser());
 //     }
 // )))
 
-app.use(cors({ origin: 'https://invespy-backends.vercel.app', credentials: true }))
+app.use(cors({ origin: 'https://hotel-realistic-project.vercel.app', credentials: true }))
 
 app.use('/api/users', userRoutes);
 app.use('/api/users', ramRoutes);
