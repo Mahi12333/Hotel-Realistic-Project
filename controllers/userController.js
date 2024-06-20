@@ -235,58 +235,53 @@ const getImageDimensions = async (filepath) => {
 
 const homeBanner = asyncHandler(async (req, res) => {
     const {
-        project_name, redirect_link, is_active, created_at,
+        project_name, redirect_link, is_active,
     } = req.body;
-
-    if (project_name && redirect_link && is_active && created_at) {
+    if (!project_name && !redirect_link && !is_active) {
         throw new ApiError(400, "All fields are required");
     }
-    const count = await HomeSchema.count({
-        where: {
-          project_name: project_name,
-          is_active: "1"
-        }
-      });
-      if(count>=2){
-        throw new ApiError(400, "Two Project Name already Created");
-      }
+    // const count = await HomeSchema.count({
+    //     where: {
+    //       project_name: project_name,
+    //       is_active: "1"
+    //     }
+    //   });
+    //   if(count>=2){
+    //     throw new ApiError(400, "Two Project Name already Created");
+    //   }
 
-    const getallHomeBanner=[];
-    for (const file of req.files){    
-        const filepath = file.filename; 
-        const dimensions = await getImageDimensions(filepath);
-        
-        if(file.originalname.split('.')[0].toLowerCase()=='desktop'){
-            if(dimensions.width >= 1920 || dimensions.height >= 1080){
-                const device_type='desktop';
-                const DesktopBannar= await HomeSchema.create({
-                    project_name, redirect_link, banner_img: file.path, is_active, created_at,types:device_type
-                });    
-                 getallHomeBanner.push(DesktopBannar);       
-            }else{
-                throw new ApiError(400, "Desktop Image Size is Invalid" ) ; 
-            }
-        }else if(file.originalname.split('.')[0].toLowerCase()=='mobile'){
-            if(dimensions.width <= 400 || dimensions.height <= 200){
-                const device_type='mobile';
-                const MobileBannar= await HomeSchema.create({
-                    project_name, redirect_link, banner_img: file.path, is_active, created_at,types:device_type
-                });   
-                getallHomeBanner.push(MobileBannar); 
-            }else{
-                throw new ApiError(400, "Mobile Image Size is Invalid" ) ; 
-            }
+    const getallHomeBanner = [];
+    for (const file of req.files) {
+        const publicId = file.filename;
+        const dimensions = await getImageDimensions(publicId);
+        if (dimensions.width >= 1920 || dimensions.height >= 1080) {
+            const device_type = 'desktop';
+            const DesktopBannar = await HomeSchema.create({
+                project_name, redirect_link, banner_img: file.path, is_active, types: device_type
+            });
+            getallHomeBanner.push(DesktopBannar);
         }
-        else{
-            throw new ApiError(400, "All Images fields are required" ) ; 
-        }    
+        else if (dimensions.width <= 400 || dimensions.height <= 200) {
+            const device_type = 'mobile';
+            const MobileBannar = await HomeSchema.create({
+                project_name, redirect_link, banner_img: file.path, is_active, types: device_type
+            });
+            getallHomeBanner.push(MobileBannar);
+        } else {
+            throw new ApiError(400, "Image Size is Invalid");
+        }
+
     }
     return res.json(new ApiResponse(201, getallHomeBanner, "Home Banners Successfully Created"));
 })
 
+
 const getHomeBanner = asyncHandler(async (req, res) => {
     const {device_type}=req.query;
     const device=device_type.toLocaleLowerCase();
+     if (!device_type) {
+        throw new ApiError(400, "Device type is required");
+    }
     const getallHomeBanner = await HomeSchema.findAll(
     { where: { is_active: '1',
         types:device  
