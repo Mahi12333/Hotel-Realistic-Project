@@ -292,7 +292,7 @@ const getHomeBanner = asyncHandler(async (req, res) => {
         types:device  
      },     
     });
-    if (getallHomeBanner.data!=null) {
+    if (getallHomeBanner.length > 0) {
         return res.json(
             new ApiResponse(200,getallHomeBanner, "banner images load succssefully")
         )
