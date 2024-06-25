@@ -297,7 +297,7 @@ const getHomeBanner = asyncHandler(async (req, res) => {
                    is_active: '1',
                },
                attributes: {
-                exclude: ['is_active','types','createdAt','updatedAt']
+                exclude: ['types','createdAt','updatedAt']
             }
            });
     }
