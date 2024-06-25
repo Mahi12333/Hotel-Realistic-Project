@@ -277,23 +277,37 @@ const homeBanner = asyncHandler(async (req, res) => {
 
 
 const getHomeBanner = asyncHandler(async (req, res) => {
-    const {device_type}=req.query;
-    const device=device_type.toLocaleLowerCase();
-     if (!device_type) {
-        throw new ApiError(400, "Device type is required");
+    const { device_type } = req.query;
+    console.log(device_type);
+    let  getallHomeBanner = []
+    if(device_type){
+        const device = device_type.toLocaleLowerCase();
+        getallHomeBanner = await HomeSchema.findAll(
+           {
+               where: {
+                   is_active: '1',
+                   types: device
+               },
+           });
     }
-    const getallHomeBanner = await HomeSchema.findAll(
-    { where: { is_active: '1',
-        types:device  
-     },     
-    });
-    if (getallHomeBanner.length > 0) {
+    else{
+        getallHomeBanner = await HomeSchema.findAll(
+           {
+               where: {
+                   is_active: '1',
+               },
+               attributes: {
+                exclude: ['is_active','types','createdAt','updatedAt']
+            }
+           });
+    }
+    if (getallHomeBanner) {
         return res.json(
-            new ApiResponse(200,getallHomeBanner, "banner images load succssefully")
+            new ApiResponse(200, getallHomeBanner, "banner images load succssefully")
         )
     }
     else {
-        throw new ApiError(403, "data is not available" ) ; 
+        throw new ApiError(403, "data is not available");
     }
 })
 
