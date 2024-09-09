@@ -1,36 +1,27 @@
-
 import { DataTypes } from 'sequelize';
 // Path to the database configuration file
 import { sequelize } from "../config/db.js";
 
-const HomeSchema = sequelize.define('HomeSchema', {
+const Estimation = sequelize.define('Estimation', {
     id: {
         type: DataTypes.INTEGER,
         primaryKey: true,
         autoIncrement: true
     },
-    project_name: {
+    quarter:{
         type: DataTypes.STRING,
         allowNull: false
     },
-    redirect_link: {
+    year:{
         type: DataTypes.STRING,
-        allowNull: false
-    },
-    banner_img: {
-        type: DataTypes.STRING,
-        allowNull: false
-    },
-     types: {    // By Mahitosh
-        type: DataTypes.STRING,
-        allowNull: false
-    },
+        allowNull: false 
+    }
+  
 },
     {
-        tableName: 'tbl_homebanner',
+        tableName: 'tbl_estimations',
         timestamps: true, // Set to true if you want Sequelize to automatically manage createdAt and updatedAt columns
     }
-)
+);
 
-
-export default HomeSchema
+export default Estimation

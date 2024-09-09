@@ -2,18 +2,13 @@ import { DataTypes } from 'sequelize';
 // Path to the database configuration file
 import { sequelize } from "../config/db.js";
 
-
-const MyFeeds = sequelize.define('MyFeeds', {
+const MyHighlight = sequelize.define('MyHighlight', {
     id: {
         type: DataTypes.INTEGER,
         primaryKey: true,
         autoIncrement: true
     },
-    source_type:{
-        type: DataTypes.STRING,
-        allowNull: true
-    },
-    title:{
+    project_name:{
         type: DataTypes.STRING,
         allowNull: true
     },
@@ -29,35 +24,32 @@ const MyFeeds = sequelize.define('MyFeeds', {
         type: DataTypes.STRING,
         allowNull: true
     },
-    link:{
-        type: DataTypes.STRING,
-        allowNull: true
-    },
-    describtion:{
-        type: DataTypes.STRING,
-        allowNull: true
-    },
     city:{
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    link:{
         type: DataTypes.STRING,
         allowNull: true
     },
     status:{
         type: DataTypes.STRING,
         allowNull: true,
-        defaultValue:0   // Assuming 1 is active, 0 is inactive, 2 is draft
+        defaultValue:1   // Assuming 1 is active, 0 is inactive, 2 is draft
     },
     is_publish:{
         type: DataTypes.STRING,
         allowNull: true,
-        defaultValue:0
+        defaultValue:1
     }
 },
     {
-        tableName: 'tbl_myfeeds',
+        tableName: 'tbl_myhighlight',
         timestamps: true, // Set to true if you want Sequelize to automatically manage createdAt and updatedAt columns
     }
 );
 
-// MyFeeds.sync({ alter: true });
-// MyFeeds.sync();
-export default MyFeeds
+// MyHighlight.sync();
+// MyHighlight.sync({ alter: true });
+// MyHighlight.sync({ force: false}); 
+export default MyHighlight

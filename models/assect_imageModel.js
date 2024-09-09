@@ -1,36 +1,39 @@
-
 import { DataTypes } from 'sequelize';
 // Path to the database configuration file
 import { sequelize } from "../config/db.js";
+import Folder from './FolderModel.js';
 
-const HomeSchema = sequelize.define('HomeSchema', {
+const Assect_image = sequelize.define('Assect_image', {
     id: {
         type: DataTypes.INTEGER,
         primaryKey: true,
         autoIncrement: true
     },
-    project_name: {
+    filename: {
         type: DataTypes.STRING,
         allowNull: false
     },
-    redirect_link: {
+    path: {
         type: DataTypes.STRING,
         allowNull: false
     },
-    banner_img: {
-        type: DataTypes.STRING,
+    size: {
+        type: DataTypes.INTEGER,
         allowNull: false
     },
-     types: {    // By Mahitosh
-        type: DataTypes.STRING,
+    folderId: {
+        type: DataTypes.INTEGER,
         allowNull: false
-    },
-},
-    {
-        tableName: 'tbl_homebanner',
-        timestamps: true, // Set to true if you want Sequelize to automatically manage createdAt and updatedAt columns
     }
-)
+}, {
+    tableName: 'tbl_assets',
+    timestamps: true
+});
 
 
-export default HomeSchema
+// Assect_image.sync();
+// Assect_image.sync({ force: false}); 
+Assect_image.sync({ alter: true }); 
+
+
+export default Assect_image

@@ -1,7 +1,7 @@
 import { DataTypes } from "sequelize";
 import { sequelize } from "../config/db.js";
 
-const Material = sequelize.define('Material', {
+const ProjectNearByAmenity = sequelize.define('ProjectNearByAmenity', {
     id: {
         type: DataTypes.INTEGER,
         primaryKey: true,
@@ -11,24 +11,26 @@ const Material = sequelize.define('Material', {
         type: DataTypes.INTEGER,
         allowNull: false
     },
-    file_name: {
+    name: {
         type: DataTypes.STRING,
         allowNull: false
     },
-    file_path: {
+    percentage: {
         type: DataTypes.STRING,
         allowNull: false
     },
-    file_type: {
-        type: DataTypes.STRING,
+    image: {
+        type: DataTypes.TEXT,
         allowNull: false
     }
-},
-    {
-        tableName: 'tbl_marketing_material', // Set the table name explicitly to match your existing table
-        timestamps: true // Set timestamps to false if you don't have createdAt and updatedAt columns
-    }
-);
+}, {
+    tableName: 'tbl_project_near_by_amenities', // Set the table name explicitly to match your existing table
+    timestamps: true // Set timestamps to false if you don't have createdAt and updatedAt columns
+});
 
-  
-export default Material
+
+
+
+export default ProjectNearByAmenity
+
+

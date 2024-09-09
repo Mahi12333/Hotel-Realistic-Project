@@ -1,34 +1,34 @@
 import { DataTypes } from "sequelize";
 import { sequelize } from "../config/db.js";
 
-const Material = sequelize.define('Material', {
+const Attachments = sequelize.define('Attachments', {
     id: {
         type: DataTypes.INTEGER,
         primaryKey: true,
         autoIncrement: true
     },
-    project_id: {
-        type: DataTypes.INTEGER,
-        allowNull: false
-    },
-    file_name: {
+    user_id: {
         type: DataTypes.STRING,
         allowNull: false
     },
-    file_path: {
+    title: {
         type: DataTypes.STRING,
         allowNull: false
     },
-    file_type: {
+    filepath: {
+        type: DataTypes.STRING,
+        allowNull: false
+    },
+    filename: {
         type: DataTypes.STRING,
         allowNull: false
     }
 },
     {
-        tableName: 'tbl_marketing_material', // Set the table name explicitly to match your existing table
+        tableName: 'tbl_attachments', // Set the table name explicitly to match your existing table
         timestamps: true // Set timestamps to false if you don't have createdAt and updatedAt columns
     }
 );
 
   
-export default Material
+export default Attachments

@@ -31,7 +31,7 @@ const Project = sequelize.define('Project', {
     allowNull: false
   },
   project_type: {
-    type: DataTypes.STRING,
+    type: DataTypes.ARRAY(DataTypes.STRING), // Change to ARRAY
     allowNull: false
   },
   description: {
@@ -41,6 +41,10 @@ const Project = sequelize.define('Project', {
   starting_price: {
     type: DataTypes.STRING,
     allowNull: false
+  },
+  location_link:{
+    type: DataTypes.TEXT,
+    allowNull: true
   },
   estimation: {
     type: DataTypes.STRING,
@@ -81,7 +85,7 @@ const Project = sequelize.define('Project', {
 });
 
 // Project.sync({alter:true})
-
+// Project.sync();
 
 
 export default Project;
