@@ -526,7 +526,7 @@ const updated_folder=asyncHandler(async(req,res)=>{
         { where: { id: folder_id } } // Specify the folder to update
     );
     const updatedFolder = await Folder.findOne({ where: { id: folder_id } });
-    return res.json(new ApiResponse(201, updatedFolder, "folder Create successfully"));
+    return res.json(new ApiResponse(201, updatedFolder, "folder Updated successfully"));
 });
 const Get_folder = asyncHandler(async (req, res) => {
     const { tody_data, last_7_days, last_month, last_3_month, last_year, name, page = 0 } = req.body;
@@ -646,6 +646,7 @@ const Preview_folder_byId=asyncHandler(async(req,res)=>{
 
 const file_upload_folder= asyncHandler(async(req,res)=>{
     const { all_id } = req.body;
+  //  console.log("hh");
    //console.log(typeof(all_id));
     // if (!all_id || !Array.isArray(all_id) || all_id.length === 0) {
     //     return res.json(new ApiResponse(403, "Folder ID(s) are required."));
@@ -653,18 +654,18 @@ const file_upload_folder= asyncHandler(async(req,res)=>{
     if (!all_id) {
         return res.json(new ApiResponse(403, null, "Folder ID(s) are required."));
     }
-   console.log(all_id);
+  // console.log(all_id);
     if (!req.files || req.files.length === 0) {
         return res.json(new ApiResponse(403, null, "No files uploaded."));
     }
     
-    // const All_id_perse=JSON.parse(all_id);
+    const All_id_perse=JSON.parse(all_id);
     
     let uploadedFiles = [];
-    for (let id of all_id) {
-        //console.log("id",id)
+    for (let id of All_id_perse) {
+        console.log("id",id)
         const folder = await Folder.findOne({ where: { id: id } });
-        //console.log(folder)
+        console.log(folder)
         if (folder) {
             for (let file of req.files) {
                 console.log(req.files);
