@@ -185,7 +185,7 @@ const create_myfeeds = asyncHandler(async (req, res) => {
         const assetImages = req.files.map(image => ({
             title:project_title,
             path: image.path,
-            filename: image.filename.split('/').pop(),
+            filename: image.filename.split('-').pop(), 
             size: image.size,
             folderId: folder_id,
             feedId: feed.id
@@ -221,7 +221,7 @@ const save_letter_myfeeds = asyncHandler(async (req, res) => {
         const assetImages = req.files.map(image => ({
             title: project_title,
             path: image.path,
-            filename: image.filename.split('/').pop(),
+            filename: image.filename.split('-').pop(),
             size: image.size,
             folderId: folder_id,
             feedId: feed.id
@@ -335,7 +335,7 @@ const updatedFeed = asyncHandler(async (req, res) => {
             const assetImages = req.files.map(image => ({
                 title: project_title,
                 path: image.path,
-                filename: image.filename.split('/').pop(),
+                filename: image.filename.split('-').pop(),
                 size: image.size,
                 folderId: folder_id,
                 feedId: feed.id
@@ -671,7 +671,7 @@ const file_upload_folder= asyncHandler(async(req,res)=>{
 
                 const newFile = await Assect_image.create({
                     folderId: folder.id,
-                    filename: file.filename.split('/').pop(),
+                    filename: file.filename.split('-').pop(),
                     path: file.path,
                     size: file.size
                 });
@@ -877,7 +877,7 @@ const CreateLikesFeed = asyncHandler(async (req, res) => {
         const assetImages = req.files.map(image => ({
             title:project_title,
             path: image.path,
-            filename: image.filename.split('/').pop(),
+            filename: image.filename.split('-').pop(),
             size: image.size,
             folderId: folder_id,
             highlightId: highlight.id
@@ -912,7 +912,7 @@ const save_letter_myhighlight = asyncHandler(async (req, res) => {
         const assetImages = req.files.map(image => ({
             title: project_title,
             path: image.path,
-            filename: image.filename.split('/').pop(),
+            filename: image.filename.split('-').pop(), //image.filename.split('/').pop()
             size: image.size,
             folderId: folder_id,
             highlightId: highlight.id
@@ -1148,7 +1148,7 @@ const updatedHighlight = asyncHandler(async (req, res) => {
             const assetImages = req.files.map(image => ({
                 title: project_title,
                 path: image.path,
-                filename: image.filename.split('/').pop(),
+                filename: image.filename.split('-').pop(),
                 size: image.size,
                 folderId: folder_id,
                 highlightId: highlight.id
@@ -1448,7 +1448,7 @@ const Add_ShareHighlight = asyncHandler(async (req, res) => {
     if (!file) {
         file = await Assect_Feed.findOne({
             where: whereClause,
-            attributes: ['id', 'path', 'filename', 'size', 'createdAt'],
+            attributes: ['id', 'title', 'path', 'filename', 'size', 'createdAt'],
             include: [{ model: Folder, attributes: ['id', 'name'] }],
         });
     }
@@ -1457,7 +1457,7 @@ const Add_ShareHighlight = asyncHandler(async (req, res) => {
     if (!file) {
         file = await Assect_Highlight.findOne({
             where: whereClause,
-            attributes: ['id', 'path', 'filename', 'size', 'createdAt'],
+            attributes: ['id', 'title', 'path', 'filename', 'size', 'createdAt'],
             include: [{ model: Folder, attributes: ['id', 'name'] }],
         });
     }
@@ -1536,7 +1536,8 @@ export {
     Publish_Feeds,
     Add_ShareFeeds,
     Add_ShareHighlight,
-    detailsImage
+    detailsImage,
+
 
 
 
