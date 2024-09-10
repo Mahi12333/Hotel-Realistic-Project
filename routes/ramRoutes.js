@@ -1,6 +1,6 @@
 import express from "express"
 
-import {GetMyFeeds, GetMyFeedsDraft, getHomeBannerSlider, AddLikesFeeds, homeBannerSliders, Create_folder, file_upload_folder, Get_folder, Get_file, Delete_folder, Delete_file, create_myfeeds, save_letter_myfeeds, getFeedDetails_byid, ActivefetchFeeds, InActivefetchFeeds, Draft_fetchFeeds, deleteFeed, updatedFeed, Delete_folder_byId, Preview_folder_byId, updated_folder, CreateLikesFeed, GetMyFeedsCount, create_myheighlight, save_letter_myhighlight, get_highLightDetails_byid, ActivefetchHighlight, InActivefetchHighlight, Draft_fetchHighlight,GetMyHighlightCount, deleteHighlight, updatedHighlight, AddLikesHighlight, Publish_Highlight, feedsActivate, feedsDeactivate, feedsDraft, highlightActivate, highlightDeactivate, highlightDraft, Publish_Feeds, Add_ShareFeeds, Add_ShareHighlight } from "../controllers/ramController.js";
+import {GetMyFeeds, GetMyFeedsDraft, getHomeBannerSlider, AddLikesFeeds, homeBannerSliders, Create_folder, file_upload_folder, Get_folder, Get_file, Delete_folder, Delete_file, create_myfeeds, save_letter_myfeeds, getFeedDetails_byid, ActivefetchFeeds, InActivefetchFeeds, Draft_fetchFeeds, deleteFeed, updatedFeed, Delete_folder_byId, Preview_folder_byId, updated_folder, CreateLikesFeed, GetMyFeedsCount, create_myheighlight, save_letter_myhighlight, get_highLightDetails_byid, ActivefetchHighlight, InActivefetchHighlight, Draft_fetchHighlight,GetMyHighlightCount, deleteHighlight, updatedHighlight, AddLikesHighlight, Publish_Highlight, feedsActivate, feedsDeactivate, feedsDraft, highlightActivate, highlightDeactivate, highlightDraft, Publish_Feeds, Add_ShareFeeds, Add_ShareHighlight, detailsImage } from "../controllers/ramController.js";
 
 import { protect } from "../middleware/authMiddleware.js";
 import multer from "multer";
@@ -125,4 +125,5 @@ router.post('/Inac-highlight-change', highlightDeactivate);
 router.post('/draft-highlight-change', highlightDraft);
 router.post('/share-feed', Add_ShareFeeds);
 router.post('/share-highlight', Add_ShareHighlight);
+router.post('/detailsImage', detailsImage);
 export default router;

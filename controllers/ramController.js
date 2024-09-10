@@ -1425,6 +1425,57 @@ const Add_ShareHighlight = asyncHandler(async (req, res) => {
   });
 
   
+  const detailsImage = asyncHandler(async (req, res) => {
+    const { folder_id, image_id } = req.body;
+
+    // Check if folder exists
+    const folder = await Folder.findOne({ where: { id: folder_id } });
+    if (!folder) {
+        return res.json(new ApiResponse(403, null, "Folder not found."));
+    }
+
+    // Construct filter conditions for folderId and image_id
+    let whereClause = { folderId: folder_id, id: image_id };
+
+    // Try fetching the file from Assect_image first
+    let file = await Assect_image.findOne({
+        where: whereClause,
+        attributes: ['id', 'path', 'filename', 'size', 'createdAt'],
+        include: [{ model: Folder, attributes: ['id', 'name'] }],
+    });
+
+    // If not found in Assect_image, try fetching from Assect_Feed
+    if (!file) {
+        file = await Assect_Feed.findOne({
+            where: whereClause,
+            attributes: ['id', 'path', 'filename', 'size', 'createdAt'],
+            include: [{ model: Folder, attributes: ['id', 'name'] }],
+        });
+    }
+
+    // If not found in Assect_Feed, try fetching from Assect_Highlight
+    if (!file) {
+        file = await Assect_Highlight.findOne({
+            where: whereClause,
+            attributes: ['id', 'path', 'filename', 'size', 'createdAt'],
+            include: [{ model: Folder, attributes: ['id', 'name'] }],
+        });
+    }
+
+    // If file is still not found, return an error
+    if (!file) {
+        return res.json(new ApiResponse(404, null, "File not found."));
+    }
+
+    // Return the file details
+    return res.json(new ApiResponse(200, {
+        file,
+    }, "File details fetched successfully."));
+});
+
+
+
+  
 
 
 
@@ -1484,7 +1535,8 @@ export {
     Publish_Highlight,
     Publish_Feeds,
     Add_ShareFeeds,
-    Add_ShareHighlight
+    Add_ShareHighlight,
+    detailsImage
 
 
 
