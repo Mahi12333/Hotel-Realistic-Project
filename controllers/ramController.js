@@ -685,9 +685,10 @@ const file_upload_folder= asyncHandler(async(req,res)=>{
 
 
 const Get_file = asyncHandler(async (req, res) => {
-    const { folder_id, today_data, last_7_days, last_month, last_3_month, last_year, name, size, page = 2 } = req.body;
+    const { folder_id, today_data, last_7_days, last_month, last_3_month, last_year, name, size, page = 1 } = req.body;
     const limit = 4;  // Set limit per page
-    const offset = parseInt(page) * limit;
+    const offset = (parseInt(page) - 1) * limit;
+
     // Check if folder exists
     const folder = await Folder.findOne({ where: { id: folder_id } });
     if (!folder) {
@@ -719,8 +720,8 @@ const Get_file = asyncHandler(async (req, res) => {
         orderClause.push(['size', size === 'asc' ? 'ASC' : 'DESC']);
     }
 
-    // Fetch images and feeds with pagination
-    const [files, feedFiles, totalImageCount, totalFeedCount] = await Promise.all([
+    // Fetch images, feeds, and highlights with pagination
+    const [files, feedFiles, highlightFiles, totalImageCount, totalFeedCount, totalHighlightCount] = await Promise.all([
         Assect_image.findAll({
             where: whereClause,
             attributes: ['id', 'path', 'filename', 'size'],
@@ -737,15 +738,24 @@ const Get_file = asyncHandler(async (req, res) => {
             limit,
             offset
         }),
+        Assect_Highlight.findAll({
+            where: whereClause,
+            attributes: ['id', 'path', 'filename', 'size'],
+            include: [{ model: Folder, attributes: ['id', 'name'] }],
+            order: orderClause.length ? orderClause : [['createdAt', 'DESC']],
+            limit,
+            offset
+        }),
         Assect_image.count({ where: whereClause }),  // Total images count
-        Assect_Feed.count({ where: whereClause })    // Total feeds count
+        Assect_Feed.count({ where: whereClause }),   // Total feeds count
+        Assect_Highlight.count({ where: whereClause })    // Total highlights count
     ]);
 
-    // Merge the image and feed data
-    const imageFiles = [...files, ...feedFiles];
-    
+    // Merge the image, feed, and highlight data
+    const imageFiles = [...files, ...feedFiles, ...highlightFiles];
+
     // Calculate total pages based on total count and limit
-    const totalRecords = totalImageCount + totalFeedCount;
+    const totalRecords = totalImageCount + totalFeedCount + totalHighlightCount;
     const totalPages = Math.ceil(totalRecords / limit);
 
     // Return the response with paginated data
