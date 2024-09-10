@@ -1,7 +1,6 @@
 import { DataTypes } from 'sequelize';
 import { sequelize } from "../config/db.js";
-import Folder from './FolderModel.js';
-import MyFeeds from './myfeedsModel.js';
+
 
 const Assect_Feed = sequelize.define('Assect_Feed', {
     id: {

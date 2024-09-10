@@ -1,7 +1,6 @@
 import { DataTypes } from 'sequelize';
 import { sequelize } from "../config/db.js";
-import Folder from './FolderModel.js';
-import MyHighlight from './myheighlightModel.js';
+
 
 const Assect_Highlight = sequelize.define('Assect_Highlight', {
     id: {
@@ -31,19 +30,11 @@ const Assect_Highlight = sequelize.define('Assect_Highlight', {
     },
     folderId: {
         type: DataTypes.INTEGER,
-        references: {
-            model: Folder,
-            key: 'id'
-        },
         allowNull: true,
         defaultValue: 0
     },
     highlightId: {
         type: DataTypes.INTEGER,
-        references: {
-            model: MyHighlight,
-            key: 'id'
-        },
         allowNull: true,
         defaultValue: 0
     }

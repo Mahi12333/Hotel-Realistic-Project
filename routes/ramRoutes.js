@@ -52,7 +52,7 @@ const folderimg = new CloudinaryStorage({
 
 // File filter function to allow only specific image and video types
 const fileFilter = function (req, file, cb) {
-    //console.log('File Info:', file); // Log file info for debugging
+    console.log('File Info:', file); // Log file info for debugging
     
     const allowedTypes = ['image/jpeg', 'image/png', 'video/mp4'];
     if (allowedTypes.includes(file.mimetype)) {

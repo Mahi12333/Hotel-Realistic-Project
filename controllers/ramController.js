@@ -605,7 +605,6 @@ const Preview_folder_byId=asyncHandler(async(req,res)=>{
         attributes: ['size'],
         include: [{
             model: Folder,
-            as: 'folder',
             attributes: ['id','name'],
         }]
     });
@@ -654,7 +653,7 @@ const file_upload_folder= asyncHandler(async(req,res)=>{
     if (!all_id) {
         return res.json(new ApiResponse(403, null, "Folder ID(s) are required."));
     }
-   //console.log(all_id);
+   console.log(all_id);
     if (!req.files || req.files.length === 0) {
         return res.json(new ApiResponse(403, null, "No files uploaded."));
     }
@@ -668,7 +667,7 @@ const file_upload_folder= asyncHandler(async(req,res)=>{
         //console.log(folder)
         if (folder) {
             for (let file of req.files) {
-                //console.log(req.files);
+                console.log(req.files);
 
                 const newFile = await Assect_image.create({
                     folderId: folder.id,

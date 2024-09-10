@@ -33,7 +33,7 @@ const Assect_image = sequelize.define('Assect_image', {
 
 // Assect_image.sync();
 // Assect_image.sync({ force: false}); 
-Assect_image.sync({ alter: true }); 
+// Assect_image.sync({ alter: true }); 
 
 
 export default Assect_image

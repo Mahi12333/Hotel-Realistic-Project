@@ -70,7 +70,7 @@ else{
 app.use(notFound);
 app.use(errorHandler);
 
-// sequelize.sync()
+sequelize.sync()
 
 app.listen(port , () => console.log(`Server started on port ${port}`));
 

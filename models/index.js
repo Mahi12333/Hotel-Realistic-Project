@@ -97,6 +97,8 @@ MyHighlight.hasMany(Assect_Highlight, { foreignKey: 'highlightId' });
 Assect_Highlight.belongsTo(MyHighlight, { foreignKey: 'highlightId' });
 
 // Assect_Highlight.sync({ alter: true });
+// Assect_Feed.sync({ alter: true });
+// Assect_image.sync({ alter: true });
 // Folder.sync({ alter: true });
 
 
