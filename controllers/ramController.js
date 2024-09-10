@@ -647,19 +647,18 @@ const Preview_folder_byId=asyncHandler(async(req,res)=>{
 const file_upload_folder= asyncHandler(async(req,res)=>{
     const { all_id } = req.body;
   //  console.log("hh");
-   //console.log(typeof(all_id));
-    if (!all_id || !Array.isArray(all_id) || all_id.length === 0) {
-        return res.json(new ApiResponse(403, "Folder ID(s) are required."));
-    }
-    // if (!all_id) {
-    //     return res.json(new ApiResponse(403, null, "Folder ID(s) are required."));
+//    console.log(typeof(all_id));
+    // if (!all_id || !Array.isArray(all_id) || all_id.length === 0) {
+    //     return res.json(new ApiResponse(403, "Folder ID(s) are required."));
     // }
-  // console.log(all_id);
+    const All_id_perse=JSON.parse(all_id);
+    if (!all_id || All_id_perse.length === 0) {
+        return res.json(new ApiResponse(403, null, "Folder ID(s) are required."));
+    }
+  console.log(all_id);
     if (!req.files || req.files.length === 0) {
         return res.json(new ApiResponse(403, null, "No files uploaded."));
     }
-    
-    const All_id_perse=JSON.parse(all_id);
     
     let uploadedFiles = [];
     for (let id of All_id_perse) {
