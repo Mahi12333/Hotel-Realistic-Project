@@ -7,6 +7,8 @@ import { ApiError } from '../utils/ApiErrors.js';
 import { ApiResponse } from '../utils/ApiReponse.js';
 import { Op } from 'sequelize';
 import { sequelize } from '../config/db.js';
+import imageSize from 'image-size';
+import axios from 'axios';
 
 
 const myfeeds = asyncHandler(async (req, res) => {
@@ -617,9 +619,18 @@ const Preview_folder_byId=asyncHandler(async(req,res)=>{
         }]
 
     });
+    const myhighlight_image=await Assect_Highlight.findAll({
+        where:{folderId:folder_id},
+        attributes: ['size'],
+        include: [{
+            model: Folder,
+            attributes: ['id','name'],
+        }]
+
+    });
     const Folder_name=preview_folder.name;
     
-    const image_file = [...files, ...myfeeds_image];
+    const image_file = [...files, ...myfeeds_image, ...myhighlight_image];
     let total_size_in_bytes = 0;
     image_file.forEach(image => {
         // Assuming file size is stored in 'file_size' attribute in bytes
@@ -1467,11 +1478,99 @@ const Add_ShareHighlight = asyncHandler(async (req, res) => {
         return res.json(new ApiResponse(404, null, "File not found."));
     }
 
-    // Return the file details
+     // Convert file size to a readable format (KB, MB, GB)
+     const formatSize = (size) => {
+        const i = size === 0 ? 0 : Math.floor(Math.log(size) / Math.log(1024));
+        const sizeInUnits = (size / Math.pow(1024, i)).toFixed(2);
+        const unit = ['B', 'KB', 'MB', 'GB', 'TB'][i];
+        return `${sizeInUnits} ${unit}`;
+    };
+
+    // Get image dimensions (if it's an image file)
+    /*let dimensions = null;
+    try {
+        dimensions = imageSize(file.path);  // You might need to fetch the file locally for sizeOf
+    } catch (error) {
+        console.log('Error fetching image dimensions:', error.message);
+    }*/
+
+        // Fetch the image from the remote URL to get dimensions
+
+    let dimensions = null;
+    try {
+        const response = await axios({
+            url: file.path,
+            responseType: 'arraybuffer',  // Fetch as binary data
+        });
+        const buffer = Buffer.from(response.data, 'binary');
+        dimensions = imageSize(buffer);  // Get image dimensions
+    } catch (error) {
+        console.log('Error fetching image dimensions:', error.message);
+    }
+
+
+    // Return the file details along with size and dimensions (if applicable)
     return res.json(new ApiResponse(200, {
-        file,
+        file: {
+            ...file.dataValues,
+            size: formatSize(file.size),  // Format size
+            dimensions: dimensions ? `${dimensions.width}x${dimensions.height}` : null,  // Dimensions if available
+        }
     }, "File details fetched successfully."));
 });
+
+  
+const updatedimagefile = asyncHandler(async (req, res) => {
+    const { folder_id, image_id, filename } = req.body;
+
+    // Check if folder exists
+    const folder = await Folder.findOne({ where: { id: folder_id } });
+    if (!folder) {
+        return res.json(new ApiResponse(403, null, "Folder not found."));
+    }
+
+    // Construct filter conditions for folderId and image_id
+    let whereClause = { folderId: folder_id, id: image_id };
+
+    // Try fetching the file from Assect_image first
+    let file = await Assect_image.findOne({
+        where: whereClause,
+        attributes: ['id', 'path', 'filename', 'size', 'createdAt'],
+        include: [{ model: Folder, attributes: ['id', 'name'] }],
+    });
+
+    // If not found in Assect_image, try fetching from Assect_Feed
+    if (!file) {
+        file = await Assect_Feed.findOne({
+            where: whereClause,
+            attributes: ['id', 'title', 'path', 'filename', 'size', 'createdAt'],
+            include: [{ model: Folder, attributes: ['id', 'name'] }],
+        });
+    }
+
+    // If not found in Assect_Feed, try fetching from Assect_Highlight
+    if (!file) {
+        file = await Assect_Highlight.findOne({
+            where: whereClause,
+            attributes: ['id', 'title', 'path', 'filename', 'size', 'createdAt'],
+            include: [{ model: Folder, attributes: ['id', 'name'] }],
+        });
+    }
+
+    // If file is still not found, return an error
+    if (!file) {
+        return res.json(new ApiResponse(404, null, "File not found."));
+    }
+     
+     
+    // Return the file details along with size and dimensions (if applicable)
+    return res.json(new ApiResponse(200, {
+        file: {
+            file,
+        }
+    }, "File details fetched successfully."));
+});
+
 
 
 
