@@ -150,13 +150,20 @@ const AddLikesFeeds = asyncHandler(async(req, res)=>{
 
 const create_myfeeds = asyncHandler(async (req, res) => {
     const { project_type, project_title, project_name, developer, community, describtion, link, folder_id, city } = req.body;
-   
+   const {file} =req.file;
+    const response={
+        project_type, project_title, project_name, developer, community, describtion, link, folder_id, city,
+        file
+    }
+    return response;
     // Validate the required fields
     if (!project_type || !project_title || !project_name || !developer || !describtion || !community || !folder_id || !link ||!city) {
         return res.status(400).json({
             message: "All fields are required."
         });   
     }
+
+
      // Check if files are provided
      if (!req.files || req.files.length === 0) {
         return res.status(400).json({
