@@ -1,8 +1,7 @@
 import asyncHandler from 'express-async-handler';
 
 import Myfeeds from '../models/myfeedsModel.js';
-import { Material, Place, Amenity, Commission,ProjectAmenity, HomeBannerSlider, HomeSchema, MyFeeds, Offer, Payment, ProjectDesignType, Project, User, MyHighlight,Folder,Assect_image, Assect_Feed, Assect_Highlight, UserShares } from '../models/index.js';
-import UserLikes from '../models/likeModel.js';
+import { Material, Place, Amenity, Commission,ProjectAmenity, HomeBannerSlider, HomeSchema, MyFeeds, Offer, Payment, ProjectDesignType, Project, User, MyHighlight,Folder,Assect_image, Assect_Feed, Assect_Highlight, UserShares, UserLikes } from '../models/index.js';
 import { ApiError } from '../utils/ApiErrors.js';
 import { ApiResponse } from '../utils/ApiReponse.js';
 import { Op } from 'sequelize';
@@ -103,6 +102,7 @@ const homeBannerSliders = asyncHandler(async (req, res) => {
         new ApiResponse(200,"Slider home banner Submitted successfully.")
     ) 
 });
+
 const getHomeBannerSlider=asyncHandler(async(req, res)=>{
     const MybannserData = await HomeBannerSlider.findAll({ where: {'is_active':'1'} },{order: [['id', 'ASC']]});
     //const MyfeedsData = await Myfeeds.findAll({order: [['id', 'ASC']]});
@@ -782,29 +782,39 @@ const Get_file = asyncHandler(async (req, res) => {
 const Delete_file=asyncHandler(async(req,res)=>{
     const { all_file_id, folder_id } = req.body;
 
+    // Validate folder_id and all_file_id
     if (!folder_id) {
         return res.json(new ApiResponse(403, null, "Folder ID is required."));
     }
-    
+
     if (!all_file_id || all_file_id.length === 0) {
         return res.json(new ApiResponse(403, null, "File IDs are required for deletion."));
     }
 
     // Find the folder by folder_id
     const folder = await Folder.findOne({ where: { id: folder_id } });
-
     if (!folder) {
         return res.json(new ApiResponse(403, null, "Folder not found."));
-        
     }
 
     const deletedFiles = [];
-    for (let file_id of all_file_id) {
-        const file = await Assect_image.findOne({ where: { id: file_id, folderId: folder.id } });
 
+    // Loop through each file_id
+    for (let file_id of all_file_id) {
+        let file = await Assect_image.findOne({ where: { id: file_id, folderId: folder.id } });
+
+        if (!file) {
+            file = await Assect_Feed.findOne({ where: { id: file_id, folderId: folder.id } });
+        }
+
+        if (!file) {
+            file = await Assect_Highlight.findOne({ where: { id: file_id, folderId: folder.id } });
+        }
+
+        // If the file is found, delete it
         if (file) {
-            await file.destroy(); // This will delete the file from the database
-            deletedFiles.push(file); // Keep track of deleted files for confirmation
+            await file.destroy(); // Deletes the file from the database
+            deletedFiles.push(file); // Keep track of deleted files
         }
     }
 
@@ -813,7 +823,8 @@ const Delete_file=asyncHandler(async(req,res)=>{
         return res.status(404).json(new ApiResponse(404, null, "No files found to delete."));
     }
 
-    return res.json(new ApiResponse(200, deletedFiles, "Selected files successfully deleted."));
+    // Return a response with the deleted files
+    return res.json(new ApiResponse(200, deletedFiles, "files successfully deleted."));
   
 });
 

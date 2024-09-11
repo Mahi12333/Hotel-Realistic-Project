@@ -36,6 +36,7 @@ import MyHighlight from "./myheighlightModel.js";
 import Assect_Highlight from "./assect_highlight.js";
 import UserShares from "./shareModel.js";
 
+
 ProjectAmenity.belongsTo(Amenity);
 Amenity.hasMany(ProjectAmenity);
 
