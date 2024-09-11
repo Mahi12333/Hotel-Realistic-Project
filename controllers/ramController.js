@@ -152,11 +152,11 @@ const create_myfeeds = asyncHandler(async (req, res) => {
     const { project_type, project_title, project_name, developer, community, describtion, link, folder_id, city, assets_feed  } = req.body;
 
     // Validate the required fields
-    // if (!project_type || !project_title || !project_name || !developer || !describtion || !community || !folder_id || !link ||!city) {
-    //     return res.status(400).json({
-    //         message: "All fields are required."
-    //     });   
-    // }
+    if (!project_type || !project_title || !project_name || !developer || !describtion || !community || !folder_id || !link ||!city) {
+        return res.status(400).json({
+            message: "All fields are required."
+        });   
+    }
     
 
     // Validate that either assets_feed or req.files is provided
