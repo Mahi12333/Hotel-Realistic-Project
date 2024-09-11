@@ -149,30 +149,27 @@ const AddLikesFeeds = asyncHandler(async(req, res)=>{
 
 
 const create_myfeeds = asyncHandler(async (req, res) => {
-    const { project_type, project_title, project_name, developer, community, describtion, link, folder_id, city,assets_feed } = req.body;
-  // const {file} =req.files;
-//    let result=[];
-//    for (const file of req.files) {
-//        result.push(file)
-//    }
-    const response={
-        project_type, project_title, project_name, developer, community, describtion, link, folder_id, city,assets_feed
-    }
-    return res.json(new ApiResponse(201,response, "Data Submitted successfully."));
+    const { project_type, project_title, project_name, developer, community, describtion, link, folder_id, city, assets_feed  } = req.body;
+
     // Validate the required fields
     if (!project_type || !project_title || !project_name || !developer || !describtion || !community || !folder_id || !link ||!city) {
         return res.status(400).json({
             message: "All fields are required."
         });   
     }
+    
 
+    // Validate that either assets_feed or req.files is provided
+    if ((!assets_feed || assets_feed.length === 0) && (!req.files || req.files.length === 0)) {
+        return res.status(400).json({ message: "At least one source of files is required (mylibrary or local files)." });
+    }
 
-     // Check if files are provided
-     if (!req.files || req.files.length === 0) {
+    if (assets_feed && assets_feed.length > 0 && req.files && req.files.length > 0) {
         return res.status(400).json({
-            message: "Files are required."
+            message: "You can only upload from one source, either 'mylibrary' or local files, not both."
         });
     }
+
 
     // Create a single feed
     const feed = await MyFeeds.create({
@@ -192,6 +189,24 @@ const create_myfeeds = asyncHandler(async (req, res) => {
         });
     }
 
+
+    // Handle assets_feed (mylibrary) if provided
+    if (assets_feed && assets_feed.length > 0) {
+        const parsedAssets = assets_feed.map(asset => {
+            const parsedAsset = JSON.parse(asset);
+            return {
+                title: project_title,
+                path: parsedAsset.path,
+                filename: parsedAsset.filename,
+                size: parsedAsset.size,
+                folderId: folder_id,
+                feedId: feed.id
+            };
+        });
+        await Assect_Feed.bulkCreate(parsedAssets);
+    }
+
+
      // If files are uploaded, associate them with the feed
      if (req.files && req.files.length > 0) {
         const assetImages = req.files.map(image => ({
@@ -210,8 +225,14 @@ const create_myfeeds = asyncHandler(async (req, res) => {
 });
 
 const save_letter_myfeeds = asyncHandler(async (req, res) => {
-    const { project_type, project_title, project_name, developer, community, describtion, link, folder_id, city } = req.body;
+    const { project_type, project_title, project_name, developer, community, describtion, link, folder_id, city, assets_feed } = req.body;
      //console.log(req.body)
+
+     if (assets_feed && assets_feed.length > 0 && req.files && req.files.length > 0) {
+        return res.status(400).json({
+            message: "You can only upload from one source, either 'mylibrary' or local files, not both."
+        });
+    }
   
     // Create a single feed
     const feed = await MyFeeds.create({
@@ -223,13 +244,24 @@ const save_letter_myfeeds = asyncHandler(async (req, res) => {
         link: link,
         describtion: describtion,
         city: city,
-        status: 2,
+        status: 2,  // Assuming status 2 means draft
         is_publish: 0
     });
 
-     // If files are uploaded, associate them with the feed
-
-     if (req.files && req.files.length > 0) {
+    if (assets_feed && assets_feed.length > 0) {
+        const parsedAssets = assets_feed.map(asset => {
+            const parsedAsset = JSON.parse(asset);
+            return {
+                title: project_title,
+                path: parsedAsset.path,
+                filename: parsedAsset.filename,
+                size: parsedAsset.size,
+                folderId: folder_id,
+                feedId: feed.id
+            };
+        });
+        await Assect_Feed.bulkCreate(parsedAssets);
+    }else if (req.files && req.files.length > 0) {
         const assetImages = req.files.map(image => ({
             title: project_title,
             path: image.path,
@@ -240,12 +272,12 @@ const save_letter_myfeeds = asyncHandler(async (req, res) => {
         }));
 
         await Assect_Feed.bulkCreate(assetImages);
-    }else{
+    }else {
         await Assect_Feed.create({
             title: project_title,
-            path: null,
+            path: null, // Empty path since no file is provided
             filename: null,
-            size: null,
+            size: 0, // 0 size indicating no file
             folderId: folder_id,
             feedId: feed.id
         });
@@ -925,7 +957,7 @@ const CreateLikesFeed = asyncHandler(async (req, res) => {
   });
 
   const create_myheighlight = asyncHandler(async (req, res) => {
-    const { project_title, project_name, developer, city, community, link, folder_id } = req.body;
+    const { project_title, project_name, developer, city, community, link, folder_id, assets_highlight } = req.body;
    //console.log(req.body);
   
    //console.log('Uploaded Files:', req.files);
@@ -933,9 +965,15 @@ const CreateLikesFeed = asyncHandler(async (req, res) => {
     if (!city || !project_title || !project_name || !developer || !community || !folder_id || !link) {
         return res.json(new ApiResponse(403, null, "All fields are required."));
     }
-     // Check if files are provided
-     if (!req.files || req.files.length === 0) {
-        return res.json(new ApiResponse(403, null, "Files are required."));
+     // Validate that either assets_feed or req.files is provided
+    if ((!assets_highlight || assets_highlight.length === 0) && (!req.files || req.files.length === 0)) {
+        return res.status(400).json({ message: "At least one source of files is required (mylibrary or local files)." });
+    }
+
+    if (assets_highlight && assets_highlight.length > 0 && req.files && req.files.length > 0) {
+        return res.status(400).json({
+            message: "You can only upload from one source, either 'mylibrary' or local files, not both."
+        });
     }
 
     // Create a single feed
@@ -951,6 +989,25 @@ const CreateLikesFeed = asyncHandler(async (req, res) => {
     if (!highlight) {
         return res.json(new ApiResponse(403, null, "Data submission failed."));
     }
+
+     // Handle assets_feed (mylibrary) if provided
+     if (assets_highlight && assets_highlight.length > 0) {
+        const parsedAssets = assets_highlight.map(asset => {
+            const parsedAsset = JSON.parse(asset);
+            return {
+                title: project_title,
+                path: parsedAsset.path,
+                filename: parsedAsset.filename,
+                size: parsedAsset.size,
+                folderId: folder_id,
+                feedId: feed.id
+            };
+        });
+        await Assect_Highlight.bulkCreate(parsedAssets);
+    }
+
+
+
 
      // If files are uploaded, associate them with the feed
      if (req.files && req.files.length > 0) {
@@ -971,7 +1028,7 @@ const CreateLikesFeed = asyncHandler(async (req, res) => {
 
 
 const save_letter_myhighlight = asyncHandler(async (req, res) => {
-    const { project_title, project_name, developer, community, city, link, folder_id } = req.body;
+    const { project_title, project_name, developer, community, city, link, folder_id, assets_highlight } = req.body;
      //console.log(req.body)
   
     // Create a single feed
@@ -986,6 +1043,12 @@ const save_letter_myhighlight = asyncHandler(async (req, res) => {
         is_publish: 0
     });
 
+    if (assets_highlight && assets_highlight.length > 0 && req.files && req.files.length > 0) {
+        return res.status(400).json({
+            message: "You can only upload from one source, either 'mylibrary' or local files, not both."
+        });
+    }
+
      // If files are uploaded, associate them with the feed
 
      if (req.files && req.files.length > 0) {
@@ -999,6 +1062,19 @@ const save_letter_myhighlight = asyncHandler(async (req, res) => {
         }));
 
         await Assect_Highlight.bulkCreate(assetImages);
+    }else if (assets_highlight && assets_highlight.length > 0) {
+        const parsedAssets = assets_highlight.map(asset => {
+            const parsedAsset = JSON.parse(asset);
+            return {
+                title: project_title,
+                path: parsedAsset.path,
+                filename: parsedAsset.filename,
+                size: parsedAsset.size,
+                folderId: folder_id,
+                feedId: feed.id
+            };
+        });
+        await Assect_Highlight.bulkCreate(parsedAssets);
     }else{
         await Assect_Highlight.create({
             title: project_title,
