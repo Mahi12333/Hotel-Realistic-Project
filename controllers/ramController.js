@@ -150,9 +150,10 @@ const AddLikesFeeds = asyncHandler(async(req, res)=>{
 
 const create_myfeeds = asyncHandler(async (req, res) => {
     const { project_type, project_title, project_name, developer, community, describtion, link, folder_id, city } = req.body;
-//    const {file} =req.file;
+   const {file} =req.files;
+   
     const response={
-        project_type, project_title, project_name, developer, community, describtion, link, folder_id, city
+        project_type, project_title, project_name, developer, community, describtion, link, folder_id, city, file
     }
     return res.json(new ApiResponse(201,response, "Data Submitted successfully."));
     // Validate the required fields
