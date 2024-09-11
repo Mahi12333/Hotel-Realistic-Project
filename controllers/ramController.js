@@ -1519,7 +1519,7 @@ const Add_ShareHighlight = asyncHandler(async (req, res) => {
     }, "File details fetched successfully."));
 });
 
-  
+
 const updatedimagefile = asyncHandler(async (req, res) => {
     const { folder_id, image_id, filename } = req.body;
 
@@ -1561,16 +1561,28 @@ const updatedimagefile = asyncHandler(async (req, res) => {
     if (!file) {
         return res.json(new ApiResponse(404, null, "File not found."));
     }
-     
-     
-    // Return the file details along with size and dimensions (if applicable)
+
+    // Update the filename
+    try {
+        if (file instanceof Assect_image) {
+            await file.update({ filename });
+        } else if (file instanceof Assect_Feed) {
+            await file.update({ filename });
+        } else if (file instanceof Assect_Highlight) {
+            await file.update({ filename });
+        }
+    } catch (error) {
+        return res.json(new ApiResponse(500, null, "Error updating filename."));
+    }
+
+    // Return the updated file details
     return res.json(new ApiResponse(200, {
         file: {
-            file,
+            ...file.dataValues,
+            filename,
         }
-    }, "File details fetched successfully."));
+    }, "Filename updated successfully."));
 });
-
 
 
 
@@ -1636,12 +1648,7 @@ export {
     Add_ShareFeeds,
     Add_ShareHighlight,
     detailsImage,
-
-
-
-
-
-
+    updatedimagefile
 
 
 }
