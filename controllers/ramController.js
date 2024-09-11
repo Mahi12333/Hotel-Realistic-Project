@@ -359,10 +359,24 @@ const updatedFeed = asyncHandler(async (req, res) => {
 
 
  const ActivefetchFeeds = asyncHandler(async (req, res) => {
+    const { search } = req.query; // Get the search query from the request
+
+    // Define the search filter for the title
+    let whereClause = {
+        status: '1',
+        is_publish: '1'
+    };
+
+    // If a search query is provided, add a filter for the title
+    if (search) {
+        whereClause = {
+            ...whereClause,
+            title: { [Op.like]: `%${search}%` } // Search for partial match in project_name
+        };
+    }
+
     const feeds = await MyFeeds.findAll({
-        where: { status: '1',
-                is_publish: '1'
-         },
+        where: whereClause,
         attributes: ['id','source_type', 'title', 'project', 'developer', 'community', 'city', 'link', 'describtion'],
         include: [{
             model: Assect_Feed,
@@ -378,10 +392,24 @@ const updatedFeed = asyncHandler(async (req, res) => {
 });
 
 const InActivefetchFeeds = asyncHandler(async (req, res) => {
+    const { search } = req.query; // Get the search query from the request
+
+    // Define the search filter for the title
+    let whereClause = {
+        status: '0',
+        is_publish: '0'
+    };
+
+    // If a search query is provided, add a filter for the title
+    if (search) {
+        whereClause = {
+            ...whereClause,
+            title: { [Op.like]: `%${search}%` } // Search for partial match in project_name
+        };
+    }
+
     const feeds = await MyFeeds.findAll({
-        where: { status: '0',
-                is_publish: '0'
-         },
+       where: whereClause,
         attributes: ['id','source_type', 'title', 'project', 'developer', 'community', 'city', 'link', 'describtion'],
         include: [{
             model: Assect_Feed,
@@ -397,10 +425,24 @@ const InActivefetchFeeds = asyncHandler(async (req, res) => {
 });
 
 const Draft_fetchFeeds = asyncHandler(async (req, res) => {
+    const { search } = req.query; // Get the search query from the request
+
+    // Define the search filter for the title
+    let whereClause = {
+        status: '1',
+        is_publish: '1'
+    };
+
+    // If a search query is provided, add a filter for the title
+    if (search) {
+        whereClause = {
+            ...whereClause,
+            title: { [Op.like]: `%${search}%` } // Search for partial match in project_name
+        };
+    }
+
     const feeds = await MyFeeds.findAll({
-        where: { status: '2',
-                is_publish: '0'
-         },
+        where: whereClause,
         attributes: ['id','source_type', 'title', 'project', 'developer', 'community', 'city', 'link', 'describtion'],
         include: [{
             model: Assect_Feed,
@@ -418,7 +460,9 @@ const Draft_fetchFeeds = asyncHandler(async (req, res) => {
 const GetMyFeedsCount = asyncHandler(async (req, res) => {
     // Get page and size from query parameters with default values
     const Activefeeds_count = await MyFeeds.findAll({
-        where:{status:'1'},
+        where:{status:'1',
+            is_publish: '1'
+        },
         include: [{
             model: Assect_Feed,
             include: [Folder]
@@ -426,7 +470,9 @@ const GetMyFeedsCount = asyncHandler(async (req, res) => {
     });
     const Activefeeds_Counts = Activefeeds_count.length;
     const InActivefeeds_count = await MyFeeds.findAll({
-        where:{status:'0'},
+        where:{status:'0',
+            is_publish: '0'
+        },
         include: [{
             model: Assect_Feed,
             include: [Folder]
@@ -434,7 +480,9 @@ const GetMyFeedsCount = asyncHandler(async (req, res) => {
     });
     const InActivefeeds_counts = InActivefeeds_count.length;
     const Draftfeeds_count = await MyFeeds.findAll({
-        where:{status:'0'},
+        where:{status:'2',
+            is_publish: '0'
+        },
         include: [{
             model: Assect_Feed,
             include: [Folder]
@@ -996,55 +1044,100 @@ const get_highLightDetails_byid = asyncHandler(async (req, res) => {
 });
 
 const ActivefetchHighlight = asyncHandler(async (req, res) => {
+    const { search } = req.query; // Get the search query from the request
+
+    // Define the search filter for the title
+    let whereClause = {
+        status: '1',
+        is_publish: '1'
+    };
+
+    // If a search query is provided, add a filter for the title
+    if (search) {
+        whereClause = {
+            ...whereClause,
+            project_name: { [Op.like]: `%${search}%` } // Search for partial match in project_name
+        };
+    }
+
+    // Fetch the highlights with the search filter
     const highlight = await MyHighlight.findAll({
-        where: { status: '1',
-            is_publish: '1'
-         },
-        attributes: ['id', 'project_name', 'project', 'developer', 'community', 'city', 'link'], // Removed empty string
+        where: whereClause,
+        attributes: ['id', 'project_name', 'project', 'developer', 'community', 'city', 'link'],
         include: [{
             model: Assect_Highlight,
             attributes: ['id', 'title', 'path', 'filename'],
             include: [{
-                model: Folder,  // Include 'Folder' properly
+                model: Folder,
                 attributes: ['id', 'name']
             }]
         }]
     });
 
-    return res.json(new ApiResponse(200, highlight, "highlight retrieved successfully."));
+    return res.json(new ApiResponse(200, highlight, "Highlights retrieved successfully."));
 });
 
 const InActivefetchHighlight = asyncHandler(async (req, res) => {
+    const { search } = req.query; // Get the search query from the request
+
+    // Define the search filter for the title
+    let whereClause = {
+        status: '0',
+        is_publish: '0'
+    };
+    // If a search query is provided, add a filter for the title
+     // If a search query is provided, add a filter for the project_name in MyHighlight
+     if (search) {
+        whereClause = {
+            ...whereClause,
+            project_name: { [Op.like]: `%${search}%` } // Search for partial match in project_name
+        };
+    }
+
+    // Fetch the highlights with the search filter
     const highlight = await MyHighlight.findAll({
-        where: { status: '0',
-              is_publish: '0'
-         },
-        attributes: ['id', 'project_name', 'project', 'developer', 'community', 'city', 'link'], // Removed empty string
+        where: whereClause,
+        attributes: ['id', 'project_name', 'project', 'developer', 'community', 'city', 'link'],
         include: [{
             model: Assect_Highlight,
             attributes: ['id', 'title', 'path', 'filename'],
             include: [{
-                model: Folder,  // Include 'Folder' properly
+                model: Folder,
                 attributes: ['id', 'name']
             }]
         }]
     });
+
 
 
     return res.json(new ApiResponse(200, highlight, "highlight retrieved successfully."));
 });
 
 const Draft_fetchHighlight = asyncHandler(async (req, res) => {
-    const highlight = await MyHighlight.findAll({
-        where: { status: '2',
-              is_publish: '0'
-         },
-        attributes: ['id', 'project_name', 'project', 'developer', 'community', 'city', 'link'], // Removed empty string
+    const { search } = req.query; // Get the search query from the request
+
+    // Define the search filter for the title
+    let whereClause = {
+        status: '2',
+        is_publish: '0'
+    };
+
+     // If a search query is provided, add a filter for the title
+     if (search) {
+        whereClause = {
+            ...whereClause,
+            project_name: { [Op.like]: `%${search}%` } // Search for partial match in project_name
+        };
+    }
+     // Fetch the highlights with the search filter
+     const highlight = await MyHighlight.findAll({
+        where: whereClause,
+        attributes: ['id', 'project_name', 'project', 'developer', 'community', 'city', 'link'],
         include: [{
             model: Assect_Highlight,
             attributes: ['id', 'title', 'path', 'filename'],
             include: [{
-                model: Folder,  // Include 'Folder' properly
+                model: Folder,
                 attributes: ['id', 'name']
             }]
         }]
@@ -1057,7 +1150,9 @@ const Draft_fetchHighlight = asyncHandler(async (req, res) => {
 const GetMyHighlightCount = asyncHandler(async (req, res) => {
     // Get page and size from query parameters with default values
     const ActiveHighlight_count = await MyHighlight.findAll({
-        where:{status:'1'},
+        where:{status:'1',
+            is_publish: '1'
+        },
         include: [{
             model: Assect_Highlight,
             include: [Folder]
@@ -1065,7 +1160,9 @@ const GetMyHighlightCount = asyncHandler(async (req, res) => {
     });
     const Activehighlight_Counts = ActiveHighlight_count.length;
     const InActiveHeighlight_count = await MyHighlight.findAll({
-        where:{status:'0'},
+        where:{status:'0',
+            is_publish: '0'
+        },
         include: [{
             model: Assect_Highlight,
             include: [Folder]
@@ -1073,7 +1170,9 @@ const GetMyHighlightCount = asyncHandler(async (req, res) => {
     });
     const InActivehighlight_counts = InActiveHeighlight_count.length;
     const DraftHightlight_count = await MyHighlight.findAll({
-        where:{status:'0'},
+        where:{status:'2',
+            is_publish: '0'
+        },
         include: [{
             model: Assect_Highlight,
             include: [Folder]
@@ -1092,7 +1191,7 @@ const GetMyHighlightCount = asyncHandler(async (req, res) => {
         "Feeds count view successful."
       )
     );
-  });
+});
 
   const deleteHighlight = asyncHandler(async (req, res) => {
     const { all_id } = req.body;

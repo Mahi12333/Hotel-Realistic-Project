@@ -35,12 +35,12 @@ const MyHighlight = sequelize.define('MyHighlight', {
     status:{
         type: DataTypes.STRING,
         allowNull: true,
-        defaultValue:1   // Assuming 1 is active, 0 is inactive, 2 is draft
+        defaultValue:0  // Assuming 1 is active, 0 is inactive, 2 is draft
     },
     is_publish:{
         type: DataTypes.STRING,
         allowNull: true,
-        defaultValue:1
+        defaultValue:0
     }
 },
     {
