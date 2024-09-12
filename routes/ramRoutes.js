@@ -108,7 +108,7 @@ router.post('/likes-feed', CreateLikesFeed);
 router.post('/myhighliht', upload.array('assets_feed'), create_myheighlight);
 router.post('/save_myhighliht_draft', upload.array('assets_feed'), save_letter_myhighlight);
 router.post('/gethighlightDetails_byid', get_highLightDetails_byid);
-// router.get('/activefetchHighlight', ActivefetchHighlight);
+// router.get('/activefetchHighlight', test);
 // router.get('/fetchHighlight_count', GetMyHighlightCount);
 // router.get('/InActivefetchHighlight', InActivefetchHighlight);
 // router.get('/draftfetchHighlight', Draft_fetchHighlight);
