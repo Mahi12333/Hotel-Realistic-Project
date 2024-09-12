@@ -296,7 +296,7 @@ const getFeedDetails_byid = asyncHandler(async (req, res) => {
  
     const feed = await MyFeeds.findAll({
         where: { id: feed_id },
-        attributes: ['id','source_type', 'title', 'project', 'developer', 'community', 'city', 'link', 'describtion'], // Removed empty string
+        attributes: ['id','source_type', 'title', 'project', 'developer', 'community', 'city', 'link', 'describtion', 'createdAt'], // Removed empty string
         include: [{
             model: Assect_Feed,
             attributes: ['id', 'title', 'path', 'filename'],
@@ -420,7 +420,7 @@ const updatedFeed = asyncHandler(async (req, res) => {
 
     const feeds = await MyFeeds.findAll({
         where: whereClause,
-        attributes: ['id','source_type', 'title', 'project', 'developer', 'community', 'city', 'link', 'describtion'],
+        attributes: ['id','source_type', 'title', 'project', 'developer', 'community', 'city', 'link', 'describtion', 'createdAt'],
         include: [{
             model: Assect_Feed,
             attributes: ['id', 'title', 'path', 'filename'],
@@ -452,7 +452,7 @@ const updatedFeed = asyncHandler(async (req, res) => {
     // Fetch the highlights with the search filter
     const highlight = await MyHighlight.findAll({
         where: whereClause,
-        attributes: ['id', 'project_name', 'project', 'developer', 'community', 'city', 'link'],
+        attributes: ['id', 'project_name', 'project', 'developer', 'community', 'city', 'link', 'createdAt'],
         include: [{
             model: Assect_Highlight,
             attributes: ['id', 'title', 'path', 'filename'],
@@ -492,7 +492,7 @@ const InActivefetchFeeds_highlight = asyncHandler(async (req, res) => {
 
     const feeds = await MyFeeds.findAll({
        where: whereClause,
-        attributes: ['id','source_type', 'title', 'project', 'developer', 'community', 'city', 'link', 'describtion'],
+        attributes: ['id','source_type', 'title', 'project', 'developer', 'community', 'city', 'link', 'describtion', 'createdAt'],
         include: [{
             model: Assect_Feed,
             attributes: ['id', 'title', 'path', 'filename'],
@@ -523,7 +523,7 @@ const InActivefetchFeeds_highlight = asyncHandler(async (req, res) => {
     // Fetch the highlights with the search filter
     const highlight = await MyHighlight.findAll({
         where: whereClause,
-        attributes: ['id', 'project_name', 'project', 'developer', 'community', 'city', 'link'],
+        attributes: ['id', 'project_name', 'project', 'developer', 'community', 'city', 'link', 'createdAt'],
         include: [{
             model: Assect_Highlight,
             attributes: ['id', 'title', 'path', 'filename'],
@@ -561,7 +561,7 @@ const Draft_fetchFeeds_highlight = asyncHandler(async (req, res) => {
 
     const feeds = await MyFeeds.findAll({
         where: whereClause,
-        attributes: ['id','source_type', 'title', 'project', 'developer', 'community', 'city', 'link', 'describtion'],
+        attributes: ['id','source_type', 'title', 'project', 'developer', 'community', 'city', 'link', 'describtion', 'createdAt'],
         include: [{
             model: Assect_Feed,
             attributes: ['id', 'title', 'path', 'filename'],
@@ -592,7 +592,7 @@ const Draft_fetchFeeds_highlight = asyncHandler(async (req, res) => {
      // Fetch the highlights with the search filter
      const highlight = await MyHighlight.findAll({
         where: whereClause,
-        attributes: ['id', 'project_name', 'project', 'developer', 'community', 'city', 'link'],
+        attributes: ['id', 'project_name', 'project', 'developer', 'community', 'city', 'link', 'createdAt'],
         include: [{
             model: Assect_Highlight,
             attributes: ['id', 'title', 'path', 'filename'],
@@ -1257,7 +1257,7 @@ const get_highLightDetails_byid = asyncHandler(async (req, res) => {
 
     const highlight = await MyHighlight.findAll({
         where: { id: highlight_id },
-        attributes: ['id', 'project_name', 'project', 'developer', 'community', 'city', 'link'], // Removed empty string
+        attributes: ['id', 'project_name', 'project', 'developer', 'community', 'city', 'link', 'createdAt'], // Removed empty string
         include: [{
             model: Assect_Highlight,
             attributes: ['id', 'title', 'path', 'filename'],
