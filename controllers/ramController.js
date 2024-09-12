@@ -422,7 +422,7 @@ const updatedFeed = asyncHandler(async (req, res) => {
 
         return await model.findAll({
             where: whereClause,
-            attributes: ['id', 'source_type', 'title', 'project', 'developer', 'community', 'city', 'link', 'describtion', 'createdAt'],
+            // attributes: ['id', 'source_type', 'title', 'project', 'developer', 'community', 'city', 'link', 'describtion', 'createdAt'],
             include: [{
                 model: assetModel,
                 attributes: ['id', 'title', 'path', 'filename'],
@@ -472,7 +472,7 @@ const InActivefetchFeeds_highlight = asyncHandler(async (req, res) => {
 
         return await model.findAll({
             where: whereClause,
-            attributes: ['id', 'source_type', 'title', 'project', 'developer', 'community', 'city', 'link', 'describtion', 'createdAt'],
+            // attributes: ['id', 'source_type', 'title', 'project', 'developer', 'community', 'city', 'link', 'describtion', 'createdAt'],
             include: [{
                 model: assetModel,
                 attributes: ['id', 'title', 'path', 'filename'],
@@ -522,7 +522,7 @@ const Draft_fetchFeeds_highlight = asyncHandler(async (req, res) => {
 
         return await model.findAll({
             where: whereClause,
-            attributes: ['id', 'source_type', 'title', 'project', 'developer', 'community', 'city', 'link', 'describtion', 'createdAt'],
+            // attributes: ['id', 'source_type', 'title', 'project', 'developer', 'community', 'city', 'link', 'describtion', 'createdAt'],
             include: [{
                 model: assetModel,
                 attributes: ['id', 'title', 'path', 'filename'],
