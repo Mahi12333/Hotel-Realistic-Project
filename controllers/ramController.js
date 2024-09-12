@@ -470,7 +470,12 @@ const updatedFeed = asyncHandler(async (req, res) => {
 const InActivefetchFeeds_highlight = asyncHandler(async (req, res) => {
     const { search } = req.query; // Get the search query from the request
     const {type}=req.body;
-    return res.json(new ApiResponse(200, type, "Please Provide Type."));
+    const ty=typeof(type);
+    const response={
+        type,
+        ty
+    }
+    return res.json(new ApiResponse(200, response, " Type."));
     if(!type){
         return res.json(new ApiResponse(200, null, "Please Provide Type."));
     }
