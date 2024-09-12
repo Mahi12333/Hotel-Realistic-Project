@@ -401,7 +401,10 @@ const updatedFeed = asyncHandler(async (req, res) => {
 
 
  const ActivefetchFeeds_highlight = asyncHandler(async (req, res) => {
-    const { search, type } = req.query;
+    const { search, type, page=1 } = req.query;
+    const limit = 4;  // Set limit per page
+    const offset = (parseInt(page) - 1) * limit;
+
     if(!type){
         return res.json(new ApiResponse(200, null, "Please Provide Type."));
     }
@@ -429,8 +432,11 @@ const updatedFeed = asyncHandler(async (req, res) => {
                 include: [{
                     model: Folder,  // Include 'Folder' properly
                     attributes: ['id', 'name']
-                }]
-            }]
+                }],
+            }],
+            order:[['createdAt', 'DESC']],
+            limit,
+            offset
         });
     };
 
@@ -451,7 +457,9 @@ const updatedFeed = asyncHandler(async (req, res) => {
 });
 
 const InActivefetchFeeds_highlight = asyncHandler(async (req, res) => {
-    const { search, type } = req.query;
+    const { search, type, page=1 } = req.query;
+    const limit = 4;  // Set limit per page
+    const offset = (parseInt(page) - 1) * limit;
     if(!type){
         return res.json(new ApiResponse(200, null, "Please Provide Type."));
     }
@@ -479,8 +487,11 @@ const InActivefetchFeeds_highlight = asyncHandler(async (req, res) => {
                 include: [{
                     model: Folder,  // Include 'Folder' properly
                     attributes: ['id', 'name']
-                }]
-            }]
+                }],
+            }],
+            order:[['createdAt', 'DESC']],
+            limit,
+            offset
         });
     };
 
@@ -501,7 +512,9 @@ const InActivefetchFeeds_highlight = asyncHandler(async (req, res) => {
 });
 
 const Draft_fetchFeeds_highlight = asyncHandler(async (req, res) => {
-    const { search, type } = req.query;
+    const { search, type, page=1 } = req.query;
+    const limit = 4;  // Set limit per page
+    const offset = (parseInt(page) - 1) * limit;
     if(!type){
         return res.json(new ApiResponse(200, null, "Please Provide Type."));
     }
@@ -529,8 +542,11 @@ const Draft_fetchFeeds_highlight = asyncHandler(async (req, res) => {
                 include: [{
                     model: Folder,  // Include 'Folder' properly
                     attributes: ['id', 'name']
-                }]
-            }]
+                }],
+            }],
+            order:[['createdAt', 'DESC']],
+            limit,
+            offset
         });
     };
 
@@ -1169,10 +1185,10 @@ const get_highLightDetails_byid = asyncHandler(async (req, res) => {
     }
 
     const totalLikeCount = await UserLikes.count({
-        where: { pid: feed_id, type: 'highlights' } // Filter by feed ID and type if necessary
+        where: { pid: highlight_id, type: 'highlights' } // Filter by feed ID and type if necessary
     });
     const totalShareCount = await UserLikes.count({
-        where: { pid: feed_id, type: 'highlights' } // Filter by feed ID and type if necessary
+        where: { pid: highlight_id, type: 'highlights' } // Filter by feed ID and type if necessary
     });
 
     const response={
