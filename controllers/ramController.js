@@ -405,67 +405,48 @@ const updatedFeed = asyncHandler(async (req, res) => {
     if(!type){
         return res.json(new ApiResponse(200, null, "Please Provide Type."));
     }
-    if(type ==='feeds'){
-        // Define the search filter for the title
-    let whereClause = {
-        status: '1',
-        is_publish: '1'
+     // Helper function to fetch data based on type (feeds/highlight)
+     const getActiveData = async (model, assetModel, searchField) => {
+        let whereClause = {
+            status: '1',
+            is_publish: '1'
+        };
+
+        // If a search query is provided, add a filter for the project_name or title
+        if (search) {
+            whereClause = {
+                ...whereClause,
+                [searchField]: { [Op.like]: `%${search}%` } // Search for partial match in searchField
+            };
+        }
+
+        return await model.findAll({
+            where: whereClause,
+            attributes: ['id', 'source_type', 'title', 'project', 'developer', 'community', 'city', 'link', 'describtion', 'createdAt'],
+            include: [{
+                model: assetModel,
+                attributes: ['id', 'title', 'path', 'filename'],
+                include: [{
+                    model: Folder,  // Include 'Folder' properly
+                    attributes: ['id', 'name']
+                }]
+            }]
+        });
     };
 
-    // If a search query is provided, add a filter for the title
-    if (search) {
-        whereClause = {
-            ...whereClause,
-            title: { [Op.like]: `%${search}%` } // Search for partial match in project_name
-        };
+    // Handle 'feeds' type
+    if (type === 'feeds') {
+        const feeds = await getActiveData(MyFeeds, Assect_Feed, 'title');
+        return res.json(new ApiResponse(200, feeds, "Feeds retrieved successfully."));
     }
 
-    const feeds = await MyFeeds.findAll({
-        where: whereClause,
-        attributes: ['id','source_type', 'title', 'project', 'developer', 'community', 'city', 'link', 'describtion', 'createdAt'],
-        include: [{
-            model: Assect_Feed,
-            attributes: ['id', 'title', 'path', 'filename'],
-            include: [{
-                model: Folder,  // Include 'Folder' properly
-                attributes: ['id', 'name']
-            }]
-        }]
-    });
-
-    return res.json(new ApiResponse(200, feeds, "Feeds retrieved successfully."));
+    // Handle 'highlight' type
+    if (type === 'highlights') {
+        const highlight = await getActiveData(MyHighlight, Assect_Highlight, 'project_name');
+        return res.json(new ApiResponse(200, highlight, "Highlights retrieved successfully."));
     }
 
-    if(type === 'highlight'){
-     // Define the search filter for the title
-    let whereClause = {
-        status: '1',
-        is_publish: '1'
-    };
-
-    // If a search query is provided, add a filter for the title
-    if (search) {
-        whereClause = {
-            ...whereClause,
-            project_name: { [Op.like]: `%${search}%` } // Search for partial match in project_name
-        };
-    }
-
-    // Fetch the highlights with the search filter
-    const highlight = await MyHighlight.findAll({
-        where: whereClause,
-        attributes: ['id', 'project_name', 'project', 'developer', 'community', 'city', 'link', 'createdAt'],
-        include: [{
-            model: Assect_Highlight,
-            attributes: ['id', 'title', 'path', 'filename'],
-            include: [{
-                model: Folder,
-                attributes: ['id', 'name']
-            }]
-        }]
-    });   
-    return res.json(new ApiResponse(200, highlight, "Highlights retrieved successfully."));
-    }
+    return res.json(new ApiResponse(400, null, "Invalid type provided."));
      
 });
 
@@ -474,69 +455,48 @@ const InActivefetchFeeds_highlight = asyncHandler(async (req, res) => {
     if(!type){
         return res.json(new ApiResponse(200, null, "Please Provide Type."));
     }
-    if(type === 'feeds'){
-    // Define the search filter for the title
-    let whereClause = {
-        status: '0',
-        is_publish: '0'
+     // Helper function to fetch data based on type (feeds/highlight)
+     const getActiveData = async (model, assetModel, searchField) => {
+        let whereClause = {
+            status: '0',
+            is_publish: '0'
+        };
+
+        // If a search query is provided, add a filter for the project_name or title
+        if (search) {
+            whereClause = {
+                ...whereClause,
+                [searchField]: { [Op.like]: `%${search}%` } // Search for partial match in searchField
+            };
+        }
+
+        return await model.findAll({
+            where: whereClause,
+            attributes: ['id', 'source_type', 'title', 'project', 'developer', 'community', 'city', 'link', 'describtion', 'createdAt'],
+            include: [{
+                model: assetModel,
+                attributes: ['id', 'title', 'path', 'filename'],
+                include: [{
+                    model: Folder,  // Include 'Folder' properly
+                    attributes: ['id', 'name']
+                }]
+            }]
+        });
     };
 
-    // If a search query is provided, add a filter for the title
-    if (search) {
-        whereClause = {
-            ...whereClause,
-            title: { [Op.like]: `%${search}%` } // Search for partial match in project_name
-        };
+    // Handle 'feeds' type
+    if (type === 'feeds') {
+        const feeds = await getActiveData(MyFeeds, Assect_Feed, 'title');
+        return res.json(new ApiResponse(200, feeds, "Feeds retrieved successfully."));
     }
 
-    const feeds = await MyFeeds.findAll({
-       where: whereClause,
-        attributes: ['id','source_type', 'title', 'project', 'developer', 'community', 'city', 'link', 'describtion', 'createdAt'],
-        include: [{
-            model: Assect_Feed,
-            attributes: ['id', 'title', 'path', 'filename'],
-            include: [{
-                model: Folder,  // Include 'Folder' properly
-                attributes: ['id', 'name']
-            }]
-        }]
-    });
-
-    return res.json(new ApiResponse(200, feeds, "Feeds retrieved successfully."));
-   }
-   if(type === 'highlight'){
-          // Define the search filter for the title
-    let whereClause = {
-        status: '0',
-        is_publish: '0'
-    };
-    // If a search query is provided, add a filter for the title
-     // If a search query is provided, add a filter for the project_name in MyHighlight
-     if (search) {
-        whereClause = {
-            ...whereClause,
-            project_name: { [Op.like]: `%${search}%` } // Search for partial match in project_name
-        };
+    // Handle 'highlight' type
+    if (type === 'highlights') {
+        const highlight = await getActiveData(MyHighlight, Assect_Highlight, 'project_name');
+        return res.json(new ApiResponse(200, highlight, "Highlights retrieved successfully."));
     }
 
-    // Fetch the highlights with the search filter
-    const highlight = await MyHighlight.findAll({
-        where: whereClause,
-        attributes: ['id', 'project_name', 'project', 'developer', 'community', 'city', 'link', 'createdAt'],
-        include: [{
-            model: Assect_Highlight,
-            attributes: ['id', 'title', 'path', 'filename'],
-            include: [{
-                model: Folder,
-                attributes: ['id', 'name']
-            }]
-        }]
-    });
-
-
-
-    return res.json(new ApiResponse(200, highlight, "highlight retrieved successfully."));
-   }
+    return res.json(new ApiResponse(400, null, "Invalid type provided."));
 
 });
 
@@ -545,166 +505,98 @@ const Draft_fetchFeeds_highlight = asyncHandler(async (req, res) => {
     if(!type){
         return res.json(new ApiResponse(200, null, "Please Provide Type."));
     }
-    if(type === 'feeds'){
-    // Define the search filter for the title
-    let whereClause = {
-        status: '2',
-        is_publish: '0'
+     // Helper function to fetch data based on type (feeds/highlight)
+     const getActiveData = async (model, assetModel, searchField) => {
+        let whereClause = {
+            status: '2',
+            is_publish: '0'
+        };
+
+        // If a search query is provided, add a filter for the project_name or title
+        if (search) {
+            whereClause = {
+                ...whereClause,
+                [searchField]: { [Op.like]: `%${search}%` } // Search for partial match in searchField
+            };
+        }
+
+        return await model.findAll({
+            where: whereClause,
+            attributes: ['id', 'source_type', 'title', 'project', 'developer', 'community', 'city', 'link', 'describtion', 'createdAt'],
+            include: [{
+                model: assetModel,
+                attributes: ['id', 'title', 'path', 'filename'],
+                include: [{
+                    model: Folder,  // Include 'Folder' properly
+                    attributes: ['id', 'name']
+                }]
+            }]
+        });
     };
 
-    // If a search query is provided, add a filter for the title
-    if (search) {
-        whereClause = {
-            ...whereClause,
-            title: { [Op.like]: `%${search}%` } // Search for partial match in project_name
-        };
+    // Handle 'feeds' type
+    if (type === 'feeds') {
+        const feeds = await getActiveData(MyFeeds, Assect_Feed, 'title');
+        return res.json(new ApiResponse(200, feeds, "Feeds retrieved successfully."));
     }
 
-    const feeds = await MyFeeds.findAll({
-        where: whereClause,
-        attributes: ['id','source_type', 'title', 'project', 'developer', 'community', 'city', 'link', 'describtion', 'createdAt'],
-        include: [{
-            model: Assect_Feed,
-            attributes: ['id', 'title', 'path', 'filename'],
-            include: [{
-                model: Folder,  // Include 'Folder' properly
-                attributes: ['id', 'name']
-            }]
-        }]
-    });
-
-    return res.json(new ApiResponse(200, feeds, "Feeds retrieved successfully."));
-  }
-
-  if(type === 'highlight'){
-         // Define the search filter for the title
-    let whereClause = {
-        status: '2',
-        is_publish: '0'
-    };
-
-     // If a search query is provided, add a filter for the title
-     if (search) {
-        whereClause = {
-            ...whereClause,
-            project_name: { [Op.like]: `%${search}%` } // Search for partial match in project_name
-        };
+    // Handle 'highlight' type
+    if (type === 'highlights') {
+        const highlight = await getActiveData(MyHighlight, Assect_Highlight, 'project_name');
+        return res.json(new ApiResponse(200, highlight, "Highlights retrieved successfully."));
     }
-     // Fetch the highlights with the search filter
-     const highlight = await MyHighlight.findAll({
-        where: whereClause,
-        attributes: ['id', 'project_name', 'project', 'developer', 'community', 'city', 'link', 'createdAt'],
-        include: [{
-            model: Assect_Highlight,
-            attributes: ['id', 'title', 'path', 'filename'],
-            include: [{
-                model: Folder,
-                attributes: ['id', 'name']
-            }]
-        }]
-    });
 
-    return res.json(new ApiResponse(200, highlight, "highlight retrieved successfully."));
-  }
+    return res.json(new ApiResponse(400, null, "Invalid type provided."));
    
 });
 
 const GetMyFeedsCount_highlight = asyncHandler(async (req, res) => {
-    const {type } = req.query;
-    if(!type){
+    const { type } = req.query;
+
+    // Validate type
+    if (!type) {
         return res.json(new ApiResponse(200, null, "Please Provide Type."));
     }
-    if(type === 'feeds'){
-    // Get page and size from query parameters with default values
-    const Activefeeds_count = await MyFeeds.findAll({
-        where:{status:'1',
-            is_publish: '1'
-        },
-        include: [{
-            model: Assect_Feed,
-            include: [Folder]
-        }]
-    });
-    const Activefeeds_Counts = Activefeeds_count.length;
-    const InActivefeeds_count = await MyFeeds.findAll({
-        where:{status:'0',
-            is_publish: '0'
-        },
-        include: [{
-            model: Assect_Feed,
-            include: [Folder]
-        }]
-    });
-    const InActivefeeds_counts = InActivefeeds_count.length;
-    const Draftfeeds_count = await MyFeeds.findAll({
-        where:{status:'2',
-            is_publish: '0'
-        },
-        include: [{
-            model: Assect_Feed,
-            include: [Folder]
-        }]
-    });
-    const Draftfeeds_counts = Draftfeeds_count.length;
-  
-    return res.status(200).json(
-      new ApiResponse(
-        200,
-        {
-          draft: Draftfeeds_counts,
-          active: Activefeeds_Counts,
-          inactive: InActivefeeds_counts
-        },
-        "Feeds count view successful."
-      )
-    );
-   }
-   
-   if(type === 'highlight'){
-      // Get page and size from query parameters with default values
-    const ActiveHighlight_count = await MyHighlight.findAll({
-        where:{status:'1',
-            is_publish: '1'
-        },
-        include: [{
-            model: Assect_Highlight,
-            include: [Folder]
-        }]
-    });
-    const Activehighlight_Counts = ActiveHighlight_count.length;
-    const InActiveHeighlight_count = await MyHighlight.findAll({
-        where:{status:'0',
-            is_publish: '0'
-        },
-        include: [{
-            model: Assect_Highlight,
-            include: [Folder]
-        }]
-    });
-    const InActivehighlight_counts = InActiveHeighlight_count.length;
-    const DraftHightlight_count = await MyHighlight.findAll({
-        where:{status:'2',
-            is_publish: '0'
-        },
-        include: [{
-            model: Assect_Highlight,
-            include: [Folder]
-        }]
-    });
-    const Drafthighlight_counts = DraftHightlight_count.length;
-  
-    return res.status(200).json(
-      new ApiResponse(
-        200,
-        {
-          draft: Drafthighlight_counts,
-          active: Activehighlight_Counts,
-          inactive: InActivehighlight_counts
-        },
-        "Highlight count view successful."
-      )
-    );
-   }
+
+    // Helper function to count records based on status and publish state
+    const getCounts = async (model, assetModel) => {
+        const activeCount = await model.count({
+            where: { status: '1', is_publish: '1' },
+            include: [{ model: assetModel, include: [Folder] }]
+        });
+
+        const inactiveCount = await model.count({
+            where: { status: '0', is_publish: '0' },
+            include: [{ model: assetModel, include: [Folder] }]
+        });
+
+        const draftCount = await model.count({
+            where: { status: '2', is_publish: '0' },
+            include: [{ model: assetModel, include: [Folder] }]
+        });
+
+        return {
+            draft: draftCount,
+            active: activeCount,
+            inactive: inactiveCount
+        };
+    };
+
+    let responseData;
+
+    if (type === 'feeds') {
+        // Get counts for feeds
+        responseData = await getCounts(MyFeeds, Assect_Feed);
+        return res.status(200).json(new ApiResponse(200, responseData, "Feeds count view successful."));
+    }
+
+    if (type === 'highlights') {
+        // Get counts for highlights
+        responseData = await getCounts(MyHighlight, Assect_Highlight);
+        return res.status(200).json(new ApiResponse(200, responseData, "Highlight count view successful."));
+    }
+
+    return res.json(new ApiResponse(400, null, "Invalid type provided."));
 
   });
 
