@@ -548,8 +548,8 @@ const Draft_fetchFeeds_highlight = asyncHandler(async (req, res) => {
     if(type === 'feeds'){
     // Define the search filter for the title
     let whereClause = {
-        status: '1',
-        is_publish: '1'
+        status: '2',
+        is_publish: '0'
     };
 
     // If a search query is provided, add a filter for the title
