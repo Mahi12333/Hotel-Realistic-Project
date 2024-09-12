@@ -402,9 +402,9 @@ const updatedFeed = asyncHandler(async (req, res) => {
 
  const ActivefetchFeeds_highlight = asyncHandler(async (req, res) => {
     const { search, type } = req.query;
-   if(!type){
-    return res.json(new ApiResponse(200, null, "Please Provide Type."));
-}
+    if(!type){
+        return res.json(new ApiResponse(200, null, "Please Provide Type."));
+    }
     if(type ==='feeds'){
         // Define the search filter for the title
     let whereClause = {
@@ -472,7 +472,7 @@ const updatedFeed = asyncHandler(async (req, res) => {
 const InActivefetchFeeds_highlight = asyncHandler(async (req, res) => {
     const { search, type } = req.query;
     if(!type){
-        return res.json(new ApiResponse(200, null, "Please Provide Typehh."));
+        return res.json(new ApiResponse(200, null, "Please Provide Type."));
     }
     if(type === 'feeds'){
     // Define the search filter for the title
@@ -541,8 +541,10 @@ const InActivefetchFeeds_highlight = asyncHandler(async (req, res) => {
 });
 
 const Draft_fetchFeeds_highlight = asyncHandler(async (req, res) => {
-    const { search } = req.query; // Get the search query from the request
-    const {type}=req.body;
+    const { search, type } = req.query;
+    if(!type){
+        return res.json(new ApiResponse(200, null, "Please Provide Type."));
+    }
     if(type === 'feeds'){
     // Define the search filter for the title
     let whereClause = {
@@ -608,7 +610,10 @@ const Draft_fetchFeeds_highlight = asyncHandler(async (req, res) => {
 });
 
 const GetMyFeedsCount_highlight = asyncHandler(async (req, res) => {
-    const {type}=req.body;
+    const {type } = req.query;
+    if(!type){
+        return res.json(new ApiResponse(200, null, "Please Provide Type."));
+    }
     if(type === 'feeds'){
     // Get page and size from query parameters with default values
     const Activefeeds_count = await MyFeeds.findAll({
