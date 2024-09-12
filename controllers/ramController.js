@@ -1432,7 +1432,7 @@ const GetMyHighlightCount = asyncHandler(async (req, res) => {
         const highlight = await MyHighlight.findOne({ where: { id: id } });
 
         // If feed is found, delete associated assets and the feed
-        if (feed) {
+        if (highlight) {
             // Delete associated assets
             await Assect_Highlight.destroy({
                 where: { highlightId: id }
