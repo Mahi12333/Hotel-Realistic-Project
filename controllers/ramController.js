@@ -401,15 +401,16 @@ const updatedFeed = asyncHandler(async (req, res) => {
 
 
  const ActivefetchFeeds_highlight = asyncHandler(async (req, res) => {
-    const { search, type, page=1 } = req.query;
+    const { search, type, page = 1 } = req.query;
     const limit = 4;  // Set limit per page
     const offset = (parseInt(page) - 1) * limit;
 
-    if(!type){
+    if (!type) {
         return res.json(new ApiResponse(200, null, "Please Provide Type."));
     }
-     // Helper function to fetch data based on type (feeds/highlight)
-     const getActiveData = async (model, assetModel, searchField) => {
+
+    // Helper function to fetch data based on type (feeds/highlight) with pagination
+    const getInactiveData = async (model, assetModel, searchField) => {
         let whereClause = {
             status: '1',
             is_publish: '1'
@@ -423,48 +424,72 @@ const updatedFeed = asyncHandler(async (req, res) => {
             };
         }
 
-        return await model.findAll({
+        // Fetch total count for pagination
+        const totalCount = await model.count({ where: whereClause });
+
+        // Fetch paginated data
+        const data = await model.findAll({
             where: whereClause,
-            attributes: ['id', 'source_type', 'title', 'project', 'developer', 'community', 'city', 'link', 'describtion', 'createdAt'],
             include: [{
                 model: assetModel,
                 attributes: ['id', 'title', 'path', 'filename'],
                 include: [{
-                    model: Folder,  // Include 'Folder' properly
+                    model: Folder,
                     attributes: ['id', 'name']
                 }],
             }],
-            order:[['createdAt', 'DESC']],
+            order: [['createdAt', 'DESC']],
             limit,
             offset
         });
+
+        return { data, totalCount };
     };
 
     // Handle 'feeds' type
     if (type === 'feeds') {
-        const feeds = await getActiveData(MyFeeds, Assect_Feed, 'title');
-        return res.json(new ApiResponse(200, feeds, "Feeds retrieved successfully."));
+        const { data: feeds, totalCount } = await getInactiveData(MyFeeds, Assect_Feed, 'title');
+        const totalPages = Math.ceil(totalCount / limit);
+
+        return res.json(new ApiResponse(200, {
+            feeds,
+            pagination: {
+                currentPage: parseInt(page),
+                totalPages,
+                totalItems: totalCount
+            }
+        }, "Feeds retrieved successfully."));
     }
 
     // Handle 'highlight' type
     if (type === 'highlights') {
-        const highlight = await getActiveData(MyHighlight, Assect_Highlight, 'project_name');
-        return res.json(new ApiResponse(200, highlight, "Highlights retrieved successfully."));
+        const { data: highlights, totalCount } = await getInactiveData(MyHighlight, Assect_Highlight, 'project_name');
+        const totalPages = Math.ceil(totalCount / limit);
+
+        return res.json(new ApiResponse(200, {
+            highlights,
+            pagination: {
+                currentPage: parseInt(page),
+                totalPages,
+                totalItems: totalCount
+            }
+        }, "Highlights retrieved successfully."));
     }
 
-    return res.json(new ApiResponse(400, null, "Invalid type provided."));
      
 });
 
 const InActivefetchFeeds_highlight = asyncHandler(async (req, res) => {
-    const { search, type, page=1 } = req.query;
+    const { search, type, page = 1 } = req.query;
     const limit = 4;  // Set limit per page
     const offset = (parseInt(page) - 1) * limit;
-    if(!type){
+
+    if (!type) {
         return res.json(new ApiResponse(200, null, "Please Provide Type."));
     }
-     // Helper function to fetch data based on type (feeds/highlight)
-     const getActiveData = async (model, assetModel, searchField) => {
+
+    // Helper function to fetch data based on type (feeds/highlight) with pagination
+    const getInactiveData = async (model, assetModel, searchField) => {
         let whereClause = {
             status: '0',
             is_publish: '0'
@@ -478,48 +503,72 @@ const InActivefetchFeeds_highlight = asyncHandler(async (req, res) => {
             };
         }
 
-        return await model.findAll({
+        // Fetch total count for pagination
+        const totalCount = await model.count({ where: whereClause });
+
+        // Fetch paginated data
+        const data = await model.findAll({
             where: whereClause,
-            // attributes: ['id', 'source_type', 'title', 'project', 'developer', 'community', 'city', 'link', 'describtion', 'createdAt'],
             include: [{
                 model: assetModel,
                 attributes: ['id', 'title', 'path', 'filename'],
                 include: [{
-                    model: Folder,  // Include 'Folder' properly
+                    model: Folder,
                     attributes: ['id', 'name']
                 }],
             }],
-            order:[['createdAt', 'DESC']],
+            order: [['createdAt', 'DESC']],
             limit,
             offset
         });
+
+        return { data, totalCount };
     };
 
     // Handle 'feeds' type
     if (type === 'feeds') {
-        const feeds = await getActiveData(MyFeeds, Assect_Feed, 'title');
-        return res.json(new ApiResponse(200, feeds, "Feeds retrieved successfully."));
+        const { data: feeds, totalCount } = await getInactiveData(MyFeeds, Assect_Feed, 'title');
+        const totalPages = Math.ceil(totalCount / limit);
+
+        return res.json(new ApiResponse(200, {
+            feeds,
+            pagination: {
+                currentPage: parseInt(page),
+                totalPages,
+                totalItems: totalCount
+            }
+        }, "Feeds retrieved successfully."));
     }
 
     // Handle 'highlight' type
     if (type === 'highlights') {
-        const highlight = await getActiveData(MyHighlight, Assect_Highlight, 'project_name');
-        return res.json(new ApiResponse(200, highlight, "Highlights retrieved successfully."));
+        const { data: highlights, totalCount } = await getInactiveData(MyHighlight, Assect_Highlight, 'project_name');
+        const totalPages = Math.ceil(totalCount / limit);
+
+        return res.json(new ApiResponse(200, {
+            highlights,
+            pagination: {
+                currentPage: parseInt(page),
+                totalPages,
+                totalItems: totalCount
+            }
+        }, "Highlights retrieved successfully."));
     }
 
-    return res.json(new ApiResponse(400, null, "Invalid type provided."));
 
 });
 
 const Draft_fetchFeeds_highlight = asyncHandler(async (req, res) => {
-    const { search, type, page=1 } = req.query;
+    const { search, type, page = 1 } = req.query;
     const limit = 4;  // Set limit per page
     const offset = (parseInt(page) - 1) * limit;
-    if(!type){
+
+    if (!type) {
         return res.json(new ApiResponse(200, null, "Please Provide Type."));
     }
-     // Helper function to fetch data based on type (feeds/highlight)
-     const getActiveData = async (model, assetModel, searchField) => {
+
+    // Helper function to fetch data based on type (feeds/highlight) with pagination
+    const getInactiveData = async (model, assetModel, searchField) => {
         let whereClause = {
             status: '2',
             is_publish: '0'
@@ -533,36 +582,57 @@ const Draft_fetchFeeds_highlight = asyncHandler(async (req, res) => {
             };
         }
 
-        return await model.findAll({
+        // Fetch total count for pagination
+        const totalCount = await model.count({ where: whereClause });
+
+        // Fetch paginated data
+        const data = await model.findAll({
             where: whereClause,
-            // attributes: ['id', 'source_type', 'title', 'project', 'developer', 'community', 'city', 'link', 'describtion', 'createdAt'],
             include: [{
                 model: assetModel,
                 attributes: ['id', 'title', 'path', 'filename'],
                 include: [{
-                    model: Folder,  // Include 'Folder' properly
+                    model: Folder,
                     attributes: ['id', 'name']
                 }],
             }],
-            order:[['createdAt', 'DESC']],
+            order: [['createdAt', 'DESC']],
             limit,
             offset
         });
+
+        return { data, totalCount };
     };
 
     // Handle 'feeds' type
     if (type === 'feeds') {
-        const feeds = await getActiveData(MyFeeds, Assect_Feed, 'title');
-        return res.json(new ApiResponse(200, feeds, "Feeds retrieved successfully."));
+        const { data: feeds, totalCount } = await getInactiveData(MyFeeds, Assect_Feed, 'title');
+        const totalPages = Math.ceil(totalCount / limit);
+
+        return res.json(new ApiResponse(200, {
+            feeds,
+            pagination: {
+                currentPage: parseInt(page),
+                totalPages,
+                totalItems: totalCount
+            }
+        }, "Feeds retrieved successfully."));
     }
 
     // Handle 'highlight' type
     if (type === 'highlights') {
-        const highlight = await getActiveData(MyHighlight, Assect_Highlight, 'project_name');
-        return res.json(new ApiResponse(200, highlight, "Highlights retrieved successfully."));
-    }
+        const { data: highlights, totalCount } = await getInactiveData(MyHighlight, Assect_Highlight, 'project_name');
+        const totalPages = Math.ceil(totalCount / limit);
 
-    return res.json(new ApiResponse(400, null, "Invalid type provided."));
+        return res.json(new ApiResponse(200, {
+            highlights,
+            pagination: {
+                currentPage: parseInt(page),
+                totalPages,
+                totalItems: totalCount
+            }
+        }, "Highlights retrieved successfully."));
+    }
    
 });
 
