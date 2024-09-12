@@ -403,7 +403,7 @@ const updatedFeed = asyncHandler(async (req, res) => {
  const ActivefetchFeeds_highlight = asyncHandler(async (req, res) => {
     const { search } = req.query; // Get the search query from the request
    const {type}=req.body;
-    if(type == 'feeds'){
+    if(type === 'feeds'){
         // Define the search filter for the title
     let whereClause = {
         status: '1',
@@ -434,7 +434,7 @@ const updatedFeed = asyncHandler(async (req, res) => {
     return res.json(new ApiResponse(200, feeds, "Feeds retrieved successfully."));
     }
 
-    if(type == 'highlight'){
+    if(type === 'highlight'){
      // Define the search filter for the title
     let whereClause = {
         status: '1',
@@ -473,7 +473,7 @@ const InActivefetchFeeds_highlight = asyncHandler(async (req, res) => {
     if(!type){
         return res.json(new ApiResponse(200, null, "Please Provide Type."));
     }
-    if(type == 'feeds'){
+    if(type === 'feeds'){
     // Define the search filter for the title
     let whereClause = {
         status: '0',
@@ -503,7 +503,7 @@ const InActivefetchFeeds_highlight = asyncHandler(async (req, res) => {
 
     return res.json(new ApiResponse(200, feeds, "Feeds retrieved successfully."));
    }
-   if(type == 'highlight'){
+   if(type === 'highlight'){
           // Define the search filter for the title
     let whereClause = {
         status: '0',
