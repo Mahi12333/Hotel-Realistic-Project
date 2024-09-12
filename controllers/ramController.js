@@ -610,6 +610,8 @@ const Draft_fetchFeeds_highlight = asyncHandler(async (req, res) => {
 });
 
 const GetMyFeedsCount_highlight = asyncHandler(async (req, res) => {
+    console.log("hh");
+    return res.json(new ApiResponse(200, null, "Please Provide Type."));
     const {type } = req.query;
     if(!type){
         return res.json(new ApiResponse(200, null, "Please Provide Type."));
