@@ -400,10 +400,11 @@ const updatedFeed = asyncHandler(async (req, res) => {
 });
 
 
- const ActivefetchFeeds = asyncHandler(async (req, res) => {
+ const ActivefetchFeeds_highlight = asyncHandler(async (req, res) => {
     const { search } = req.query; // Get the search query from the request
-
-    // Define the search filter for the title
+   const {type}=req.body;
+    if(type === 'feeds'){
+        // Define the search filter for the title
     let whereClause = {
         status: '1',
         is_publish: '1'
@@ -431,11 +432,47 @@ const updatedFeed = asyncHandler(async (req, res) => {
     });
 
     return res.json(new ApiResponse(200, feeds, "Feeds retrieved successfully."));
+    }
+
+    if(type === 'highlight'){
+     // Define the search filter for the title
+    let whereClause = {
+        status: '1',
+        is_publish: '1'
+    };
+
+    // If a search query is provided, add a filter for the title
+    if (search) {
+        whereClause = {
+            ...whereClause,
+            project_name: { [Op.like]: `%${search}%` } // Search for partial match in project_name
+        };
+    }
+
+    // Fetch the highlights with the search filter
+    const highlight = await MyHighlight.findAll({
+        where: whereClause,
+        attributes: ['id', 'project_name', 'project', 'developer', 'community', 'city', 'link'],
+        include: [{
+            model: Assect_Highlight,
+            attributes: ['id', 'title', 'path', 'filename'],
+            include: [{
+                model: Folder,
+                attributes: ['id', 'name']
+            }]
+        }]
+    });
+
+    return res.json(new ApiResponse(200, highlight, "Highlights retrieved successfully."));
+    }
+    
+    
 });
 
-const InActivefetchFeeds = asyncHandler(async (req, res) => {
+const InActivefetchFeeds_highlight = asyncHandler(async (req, res) => {
     const { search } = req.query; // Get the search query from the request
-
+    const {type}=req.body;
+    if(type === 'feeds'){
     // Define the search filter for the title
     let whereClause = {
         status: '0',
@@ -464,11 +501,47 @@ const InActivefetchFeeds = asyncHandler(async (req, res) => {
     });
 
     return res.json(new ApiResponse(200, feeds, "Feeds retrieved successfully."));
+   }
+   if(type === 'highlight'){
+          // Define the search filter for the title
+    let whereClause = {
+        status: '0',
+        is_publish: '0'
+    };
+    // If a search query is provided, add a filter for the title
+     // If a search query is provided, add a filter for the project_name in MyHighlight
+     if (search) {
+        whereClause = {
+            ...whereClause,
+            project_name: { [Op.like]: `%${search}%` } // Search for partial match in project_name
+        };
+    }
+
+    // Fetch the highlights with the search filter
+    const highlight = await MyHighlight.findAll({
+        where: whereClause,
+        attributes: ['id', 'project_name', 'project', 'developer', 'community', 'city', 'link'],
+        include: [{
+            model: Assect_Highlight,
+            attributes: ['id', 'title', 'path', 'filename'],
+            include: [{
+                model: Folder,
+                attributes: ['id', 'name']
+            }]
+        }]
+    });
+
+
+
+    return res.json(new ApiResponse(200, highlight, "highlight retrieved successfully."));
+   }
+
 });
 
-const Draft_fetchFeeds = asyncHandler(async (req, res) => {
+const Draft_fetchFeeds_highlight = asyncHandler(async (req, res) => {
     const { search } = req.query; // Get the search query from the request
-
+    const {type}=req.body;
+    if(type === 'feeds'){
     // Define the search filter for the title
     let whereClause = {
         status: '1',
@@ -497,9 +570,44 @@ const Draft_fetchFeeds = asyncHandler(async (req, res) => {
     });
 
     return res.json(new ApiResponse(200, feeds, "Feeds retrieved successfully."));
+  }
+
+  if(type === 'highlight'){
+         // Define the search filter for the title
+    let whereClause = {
+        status: '2',
+        is_publish: '0'
+    };
+
+     // If a search query is provided, add a filter for the title
+     if (search) {
+        whereClause = {
+            ...whereClause,
+            project_name: { [Op.like]: `%${search}%` } // Search for partial match in project_name
+        };
+    }
+     // Fetch the highlights with the search filter
+     const highlight = await MyHighlight.findAll({
+        where: whereClause,
+        attributes: ['id', 'project_name', 'project', 'developer', 'community', 'city', 'link'],
+        include: [{
+            model: Assect_Highlight,
+            attributes: ['id', 'title', 'path', 'filename'],
+            include: [{
+                model: Folder,
+                attributes: ['id', 'name']
+            }]
+        }]
+    });
+
+    return res.json(new ApiResponse(200, highlight, "highlight retrieved successfully."));
+  }
+   
 });
 
-const GetMyFeedsCount = asyncHandler(async (req, res) => {
+const GetMyFeedsCount_highlight = asyncHandler(async (req, res) => {
+    const {type}=req.body;
+    if(type === 'feeds'){
     // Get page and size from query parameters with default values
     const Activefeeds_count = await MyFeeds.findAll({
         where:{status:'1',
@@ -543,6 +651,54 @@ const GetMyFeedsCount = asyncHandler(async (req, res) => {
         "Feeds count view successful."
       )
     );
+   }
+   
+   if(type === 'highlight'){
+      // Get page and size from query parameters with default values
+    const ActiveHighlight_count = await MyHighlight.findAll({
+        where:{status:'1',
+            is_publish: '1'
+        },
+        include: [{
+            model: Assect_Highlight,
+            include: [Folder]
+        }]
+    });
+    const Activehighlight_Counts = ActiveHighlight_count.length;
+    const InActiveHeighlight_count = await MyHighlight.findAll({
+        where:{status:'0',
+            is_publish: '0'
+        },
+        include: [{
+            model: Assect_Highlight,
+            include: [Folder]
+        }]
+    });
+    const InActivehighlight_counts = InActiveHeighlight_count.length;
+    const DraftHightlight_count = await MyHighlight.findAll({
+        where:{status:'2',
+            is_publish: '0'
+        },
+        include: [{
+            model: Assect_Highlight,
+            include: [Folder]
+        }]
+    });
+    const Drafthighlight_counts = DraftHightlight_count.length;
+  
+    return res.status(200).json(
+      new ApiResponse(
+        200,
+        {
+          draft: Drafthighlight_counts,
+          active: Activehighlight_Counts,
+          inactive: InActivehighlight_counts
+        },
+        "Highlight count view successful."
+      )
+    );
+   }
+
   });
 
 const deleteFeed = asyncHandler(async (req, res) => {
@@ -621,7 +777,7 @@ const updated_folder=asyncHandler(async(req,res)=>{
     return res.json(new ApiResponse(201, updatedFolder, "folder Updated successfully"));
 });
 const Get_folder = asyncHandler(async (req, res) => {
-    const { tody_data, last_7_days, last_month, last_3_month, last_year, name, page = 0 } = req.body;
+    const { tody_data, last_7_days, last_month, last_3_month, last_year, name, page = 1 } = req.body;
     const limit = 10;  // Set limit per page
     const offset = parseInt(page) * limit;
 
@@ -1229,7 +1385,6 @@ const Draft_fetchHighlight = asyncHandler(async (req, res) => {
         }]
     });
 
-
     return res.json(new ApiResponse(200, highlight, "highlight retrieved successfully."));
 });
 
@@ -1822,23 +1977,23 @@ export {
     Preview_folder_byId,
     updated_folder,
     CreateLikesFeed,
-    GetMyFeedsCount,
+    GetMyFeedsCount_highlight,
     create_myheighlight,
     save_letter_myhighlight,
     get_highLightDetails_byid,
-    ActivefetchHighlight,
-    InActivefetchHighlight,
-    Draft_fetchHighlight,
-    GetMyHighlightCount,
+    ActivefetchFeeds_highlight,
+    InActivefetchFeeds_highlight,
+    Draft_fetchFeeds_highlight,
+    // GetMyHighlightCount,
     deleteHighlight,
     updatedHighlight,
     AddLikesHighlight,
     feedsActivate,
     feedsDraft,
     feedsDeactivate,
-    highlightActivate,
-    highlightDeactivate,
-    highlightDraft,
+    // highlightActivate,
+    // highlightDeactivate,
+    // highlightDraft,
     Publish_Highlight,
     Publish_Feeds,
     Add_ShareFeeds,

@@ -1,6 +1,6 @@
 import express from "express"
 
-import {GetMyFeeds, GetMyFeedsDraft, getHomeBannerSlider, AddLikesFeeds, homeBannerSliders, Create_folder, file_upload_folder, Get_folder, Get_file, Delete_folder, Delete_file, create_myfeeds, save_letter_myfeeds, getFeedDetails_byid, ActivefetchFeeds, InActivefetchFeeds, Draft_fetchFeeds, deleteFeed, updatedFeed, Delete_folder_byId, Preview_folder_byId, updated_folder, CreateLikesFeed, GetMyFeedsCount, create_myheighlight, save_letter_myhighlight, get_highLightDetails_byid, ActivefetchHighlight, InActivefetchHighlight, Draft_fetchHighlight,GetMyHighlightCount, deleteHighlight, updatedHighlight, AddLikesHighlight, Publish_Highlight, feedsActivate, feedsDeactivate, feedsDraft, highlightActivate, highlightDeactivate, highlightDraft, Publish_Feeds, Add_ShareFeeds, Add_ShareHighlight, detailsImage, updatedimagefile } from "../controllers/ramController.js";
+import {GetMyFeeds, GetMyFeedsDraft, getHomeBannerSlider, AddLikesFeeds, homeBannerSliders, Create_folder, file_upload_folder, Get_folder, Get_file, Delete_folder, Delete_file, create_myfeeds, save_letter_myfeeds, getFeedDetails_byid, ActivefetchFeeds, InActivefetchFeeds, Draft_fetchFeeds, deleteFeed, updatedFeed, Delete_folder_byId, Preview_folder_byId, updated_folder, CreateLikesFeed, GetMyFeedsCount, create_myheighlight, save_letter_myhighlight, get_highLightDetails_byid, ActivefetchHighlight, InActivefetchHighlight, Draft_fetchHighlight,GetMyHighlightCount, deleteHighlight, updatedHighlight, AddLikesHighlight, Publish_Highlight, feedsActivate, feedsDeactivate, feedsDraft, highlightActivate, highlightDeactivate, highlightDraft, Publish_Feeds, Add_ShareFeeds, Add_ShareHighlight, detailsImage, updatedimagefile, ActivefetchFeeds_highlight, InActivefetchFeeds_highlight, Draft_fetchFeeds_highlight, GetMyFeedsCount_highlight } from "../controllers/ramController.js";
 
 import { protect } from "../middleware/authMiddleware.js";
 import multer from "multer";
@@ -95,10 +95,10 @@ router.post('/delete-file', Delete_file);
 // router.post('/sortby-file', sortby_file);
 router.post('/save_myfeeds_draft', upload.array('assets_feed'), save_letter_myfeeds);
 router.post('/getFeedDetails_byid', getFeedDetails_byid);
-router.get('/activefetchFeeds', ActivefetchFeeds);
-router.get('/fetchFeeds_count', GetMyFeedsCount);
-router.get('/InActivefetchFeeds', InActivefetchFeeds);
-router.get('/draftfetchFeeds', Draft_fetchFeeds);
+router.get('/activefetchFeeds_highlight', ActivefetchFeeds_highlight);
+router.get('/fetch_count', GetMyFeedsCount_highlight);
+router.get('/InActivefetchFeeds_highlight', InActivefetchFeeds_highlight);
+router.get('/draftfetchFeeds_highlight', Draft_fetchFeeds_highlight);
 router.delete('/deletefeeds', deleteFeed);  
 router.put('/updatedfeeds',upload.array('assets_feed'), updatedFeed);
 router.post('/delete-folder-id', Delete_folder_byId);
@@ -108,10 +108,10 @@ router.post('/likes-feed', CreateLikesFeed);
 router.post('/myhighliht', upload.array('assets_feed'), create_myheighlight);
 router.post('/save_myhighliht_draft', upload.array('assets_feed'), save_letter_myhighlight);
 router.post('/gethighlightDetails_byid', get_highLightDetails_byid);
-router.get('/activefetchHighlight', ActivefetchHighlight);
-router.get('/fetchHighlight_count', GetMyHighlightCount);
-router.get('/InActivefetchHighlight', InActivefetchHighlight);
-router.get('/draftfetchHighlight', Draft_fetchHighlight);
+// router.get('/activefetchHighlight', ActivefetchHighlight);
+// router.get('/fetchHighlight_count', GetMyHighlightCount);
+// router.get('/InActivefetchHighlight', InActivefetchHighlight);
+// router.get('/draftfetchHighlight', Draft_fetchHighlight);
 router.delete('/deletehighlight', deleteHighlight);  
 router.put('/updatedhighlight',upload.array('assets_feed'), updatedHighlight);
 router.post('/likes-highlight', AddLikesHighlight);
