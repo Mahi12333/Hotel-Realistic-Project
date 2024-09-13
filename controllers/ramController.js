@@ -495,7 +495,7 @@ const updatedFeed = asyncHandler(async (req, res) => {
     // Handle 'highlight' type
     if (type === 'highlights') {
         // const { data: highlights, pagination } = await getInactiveData(MyHighlight, Assect_Highlight, 'project_name');
-        const { data: highlights, totalCount } = await getInactiveData(MyHighlight, Assect_Highlight, 'project_name');
+        const { data: highlights, totalCount } = await getInactiveData(MyHighlight, Assect_Highlight, 'title');
         const totalPages = Math.ceil(totalCount / limit);
     //     return res.json(new ApiResponse(200, {
     //         highlights: {
@@ -582,7 +582,7 @@ const InActivefetchFeeds_highlight = asyncHandler(async (req, res) => {
 
     // Handle 'highlight' type
     if (type === 'highlights') {
-        const { data: highlights, totalCount } = await getInactiveData(MyHighlight, Assect_Highlight, 'project_name');
+        const { data: highlights, totalCount } = await getInactiveData(MyHighlight, Assect_Highlight, 'title');
         const totalPages = Math.ceil(totalCount / limit);
 
         return res.json(new ApiResponse(200, {
@@ -628,9 +628,9 @@ const Draft_fetchFeeds_highlight = asyncHandler(async (req, res) => {
         // Fetch paginated data
         const data = await model.findAll({
             where: whereClause,
+
             include: [{
                 model: assetModel,
-                attributes: ['id', 'title', 'path', 'filename'],
                 include: [{
                     model: Folder,
                     attributes: ['id', 'name']
@@ -661,7 +661,7 @@ const Draft_fetchFeeds_highlight = asyncHandler(async (req, res) => {
 
     // Handle 'highlight' type
     if (type === 'highlights') {
-        const { data: highlights, totalCount } = await getInactiveData(MyHighlight, Assect_Highlight, 'project_name');
+        const { data: highlights, totalCount } = await getInactiveData(MyHighlight, Assect_Highlight, 'title');
         const totalPages = Math.ceil(totalCount / limit);
 
         return res.json(new ApiResponse(200, {
@@ -1159,7 +1159,7 @@ const CreateLikesFeed = asyncHandler(async (req, res) => {
 
     // Create a single feed
     const highlight = await MyHighlight.create({
-        project_name: project_title,
+        title: project_title,
         project: project_name,
         developer: developer,
         community: community,
@@ -1214,7 +1214,7 @@ const save_letter_myhighlight = asyncHandler(async (req, res) => {
   
     // Create a single feed
     const highlight = await MyHighlight.create({
-        project_name: project_title,
+        title: project_title,
         project: project_name,
         developer: developer,
         community: community,
@@ -1520,7 +1520,7 @@ const updatedHighlight = asyncHandler(async (req, res) => {
 
         // Update the feed details
         await highlight.update({
-            project_name: project_title,
+            title: project_title,
             project: project_name,
             developer: developer,
             community: community,

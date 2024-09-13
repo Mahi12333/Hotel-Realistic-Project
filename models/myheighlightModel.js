@@ -8,7 +8,7 @@ const MyHighlight = sequelize.define('MyHighlight', {
         primaryKey: true,
         autoIncrement: true
     },
-    project_name:{
+    title:{
         type: DataTypes.STRING,
         allowNull: true
     },
