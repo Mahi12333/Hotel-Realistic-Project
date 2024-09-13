@@ -226,8 +226,11 @@ const create_myfeeds = asyncHandler(async (req, res) => {
 
 const save_letter_myfeeds = asyncHandler(async (req, res) => {
     const { project_type, project_title, project_name, developer, community, describtion, link, folder_id, city, assets_feed } = req.body;
+    const response={
+        project_type, project_title, project_name, developer, community, describtion, link, folder_id, city, assets_feed
+    }
      //console.log(req.body)
-
+     return res.json(new ApiResponse(201,response, "Save  Submitted successfully."));
      if (assets_feed && assets_feed.length > 0 && req.files && req.files.length > 0) {
         return res.status(400).json({
             message: "You can only upload from one source, either 'mylibrary' or local files, not both."
