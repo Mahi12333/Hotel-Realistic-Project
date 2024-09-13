@@ -761,10 +761,11 @@ const updated_folder=asyncHandler(async(req,res)=>{
     const updatedFolder = await Folder.findOne({ where: { id: folder_id } });
     return res.json(new ApiResponse(201, updatedFolder, "folder Updated successfully"));
 });
+
 const Get_folder = asyncHandler(async (req, res) => {
     const { tody_data, last_7_days, last_month, last_3_month, last_year, name, page = 1 } = req.body;
     const limit = 10;  // Set limit per page
-    const offset = parseInt(page) * limit;
+    const offset = (parseInt(page) - 1) * limit; 
 
     // Construct filter and sort conditions
     let whereClause = {};
@@ -792,18 +793,16 @@ const Get_folder = asyncHandler(async (req, res) => {
     const totalFolders = await Folder.count({
         where: whereClause
     });
-
+   
     // Fetch data from the database based on filter conditions
     const folders = await Folder.findAll({
         where: whereClause,
-        order: orderClause.length > 0 ? orderClause : [['createdAt', 'DESC']], // Default sort by createdAt
+        //order: orderClause.length > 0 ? orderClause : [['createdAt', 'DESC']], // Default sort by createdAt
         limit,
         offset
     });
-
     // Calculate total pages
     const totalPages = Math.ceil(totalFolders / limit);
-
     // Return the folders along with pagination details
     return res.json(new ApiResponse(200, {
         folders,
