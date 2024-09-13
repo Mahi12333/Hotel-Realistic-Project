@@ -293,7 +293,7 @@ const getFeedDetails_byid = asyncHandler(async (req, res) => {
     return res.json(new ApiResponse(403, null, "Feed id is required."));
    }
  
-    const feed = await MyFeeds.findAll({
+    const feed = await MyFeeds.findOne({
         where: { id: feed_id },
         attributes: ['id','source_type', 'title', 'project', 'developer', 'community', 'city', 'link', 'describtion', 'createdAt'], // Removed empty string
         include: [{
@@ -302,8 +302,8 @@ const getFeedDetails_byid = asyncHandler(async (req, res) => {
             include: [{
                 model: Folder,  // Include 'Folder' properly
                 attributes: ['id', 'name']
-            }]
-        }]
+            }],
+        }],
     });
 
     if (!feed) {
@@ -318,11 +318,30 @@ const getFeedDetails_byid = asyncHandler(async (req, res) => {
     });
 
 
-    const response={
-        feed,
+    const response = {
+        id: feed.id,
+        source_type: feed.source_type,
+        title: feed.title,
+        project: feed.project,
+        developer: feed.developer,
+        community: feed.community,
+        city: feed.city,
+        link: feed.link,
+        description: feed.description,
+        createdAt: feed.createdAt,
         totalLikeCount,
-        totalShareCount
-    }
+        totalShareCount,
+        Assect_Feeds: feed.Assect_Feeds.map(asset => ({
+            id: asset.id,
+            title: asset.title,
+            path: asset.path,
+            filename: asset.filename,
+            folder: asset.Folder ? {
+                id: asset.Folder.id,
+                name: asset.Folder.name
+            } : null
+        }))
+    };
 
 
     return res.json(new ApiResponse(200, response, "Feed details retrieved successfully."));
@@ -442,14 +461,25 @@ const updatedFeed = asyncHandler(async (req, res) => {
             offset
         });
 
-        return { data, totalCount };
+        // const totalPages = Math.ceil(totalCount / limit);
+        // return { data, pagination: { currentPage: parseInt(page), totalPages, totalItems: totalCount } };
+        return {data, totalCount}
     };
 
     // Handle 'feeds' type
     if (type === 'feeds') {
+        // const { data: feeds, pagination } = await getInactiveData(MyFeeds, Assect_Feed, 'title');
         const { data: feeds, totalCount } = await getInactiveData(MyFeeds, Assect_Feed, 'title');
         const totalPages = Math.ceil(totalCount / limit);
+ 
 
+        // return res.json(new ApiResponse(200, {
+        //     feeds: {
+        //         data: feeds,
+        //         pagination
+        //     }
+        // }, "Feeds retrieved successfully."));
+        
         return res.json(new ApiResponse(200, {
             feeds,
             pagination: {
@@ -458,22 +488,33 @@ const updatedFeed = asyncHandler(async (req, res) => {
                 totalItems: totalCount
             }
         }, "Feeds retrieved successfully."));
+
+
     }
 
     // Handle 'highlight' type
     if (type === 'highlights') {
+        // const { data: highlights, pagination } = await getInactiveData(MyHighlight, Assect_Highlight, 'project_name');
         const { data: highlights, totalCount } = await getInactiveData(MyHighlight, Assect_Highlight, 'project_name');
         const totalPages = Math.ceil(totalCount / limit);
+    //     return res.json(new ApiResponse(200, {
+    //         highlights: {
+    //             data: highlights,
+    //             pagination
+    //         }
+    //     }, "Highlights retrieved successfully."));
+    // }
 
-        return res.json(new ApiResponse(200, {
-            highlights,
-            pagination: {
-                currentPage: parseInt(page),
-                totalPages,
-                totalItems: totalCount
-            }
-        }, "Highlights retrieved successfully."));
-    }
+    return res.json(new ApiResponse(200, {
+        highlights,
+        pagination: {
+            currentPage: parseInt(page),
+            totalPages,
+            totalItems: totalCount
+        }
+    }, "Highlights retrieved successfully."));
+}
+
 
      
 });
