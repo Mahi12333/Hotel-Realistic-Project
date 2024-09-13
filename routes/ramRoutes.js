@@ -99,7 +99,7 @@ router.get('/active', ActivefetchFeeds_highlight);
 router.get('/fetch_count', GetMyFeedsCount_highlight);
 router.get('/inactive', InActivefetchFeeds_highlight);
 router.get('/draft', Draft_fetchFeeds_highlight);
-router.post('/deletefeeds', deleteFeed);  
+router.delete('/deletefeeds', deleteFeed);  
 router.put('/updatedfeeds',upload.array('assets_feed'), updatedFeed);
 router.post('/delete-folder-id', Delete_folder_byId);
 router.post('/preview-folder-id', Preview_folder_byId);
