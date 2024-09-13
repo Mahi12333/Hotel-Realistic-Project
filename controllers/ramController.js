@@ -401,7 +401,7 @@ const updatedFeed = asyncHandler(async (req, res) => {
 
  const ActivefetchFeeds_highlight = asyncHandler(async (req, res) => {
     const { search, type, page = 1 } = req.query;
-    const limit = 4;  // Set limit per page
+    const limit = 10;  // Set limit per page
     const offset = (parseInt(page) - 1) * limit;
 
     if (!type) {
@@ -480,7 +480,7 @@ const updatedFeed = asyncHandler(async (req, res) => {
 
 const InActivefetchFeeds_highlight = asyncHandler(async (req, res) => {
     const { search, type, page = 1 } = req.query;
-    const limit = 4;  // Set limit per page
+    const limit = 10;  // Set limit per page
     const offset = (parseInt(page) - 1) * limit;
 
     if (!type) {
@@ -559,7 +559,7 @@ const InActivefetchFeeds_highlight = asyncHandler(async (req, res) => {
 
 const Draft_fetchFeeds_highlight = asyncHandler(async (req, res) => {
     const { search, type, page = 1 } = req.query;
-    const limit = 4;  // Set limit per page
+    const limit = 10;  // Set limit per page
     const offset = (parseInt(page) - 1) * limit;
 
     if (!type) {
