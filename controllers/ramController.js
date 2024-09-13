@@ -226,11 +226,7 @@ const create_myfeeds = asyncHandler(async (req, res) => {
 
 const save_letter_myfeeds = asyncHandler(async (req, res) => {
     const { project_type, project_title, project_name, developer, community, describtion, link, folder_id, city, assets_feed } = req.body;
-    // const response={
-    //     project_type, project_title, project_name, developer, community, describtion, link, folder_id, city, assets_feed
-    // }
-    //  //console.log(req.body)
-    //  return res.json(new ApiResponse(201,response, "Save  Submitted successfully."));
+  
      if (assets_feed && assets_feed.length > 0 && req.files && req.files.length > 0) {
         return res.status(400).json({
             message: "You can only upload from one source, either 'mylibrary' or local files, not both."
@@ -649,20 +645,23 @@ const GetMyFeedsCount_highlight = asyncHandler(async (req, res) => {
 
     // Helper function to count records based on status and publish state
     const getCounts = async (model, assetModel) => {
-        const activeCount = await model.count({
+        const activeCounts = await model.findAll({
             where: { status: '1', is_publish: '1' },
             include: [{ model: assetModel, include: [Folder] }]
         });
+        const activeCount = activeCounts.length;
 
-        const inactiveCount = await model.count({
+        const inactiveCounts = await model.findAll({
             where: { status: '0', is_publish: '0' },
             include: [{ model: assetModel, include: [Folder] }]
         });
+        const inactiveCount = inactiveCounts.length;
 
-        const draftCount = await model.count({
+        const draftCounts = await model.findAll({
             where: { status: '2', is_publish: '0' },
             include: [{ model: assetModel, include: [Folder] }]
         });
+        const draftCount = draftCounts.length;
 
         return {
             draft: draftCount,
@@ -685,9 +684,7 @@ const GetMyFeedsCount_highlight = asyncHandler(async (req, res) => {
         return res.status(200).json(new ApiResponse(200, responseData, "Highlight count view successful."));
     }
 
-    return res.json(new ApiResponse(400, null, "Invalid type provided."));
-
-  });
+});
 
 const deleteFeed = asyncHandler(async (req, res) => {
     const { all_id } = req.body;
