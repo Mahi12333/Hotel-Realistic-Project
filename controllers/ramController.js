@@ -349,10 +349,18 @@ const getFeedDetails_byid = asyncHandler(async (req, res) => {
 
 const updatedFeed = asyncHandler(async (req, res) => {
     const { id } = req.body;
-    const { project_type, project_title, project_name, developer, community, describtion, link, folder_id } = req.body;
-      
-       // Start transaction
-       const transaction = await sequelize.transaction();
+    const { project_type, project_title, project_name, developer, community, describtion, link, folder_id, assets_feed } = req.body;
+
+     // Validate that either assets_feed or req.files is provided
+     if ((!assets_feed || assets_feed.length === 0) && (!req.files || req.files.length === 0)) {
+        return res.status(400).json({ message: "At least one source of files is required (mylibrary or local files)." });
+    }
+
+    if (assets_feed && assets_feed.length > 0 && req.files && req.files.length > 0) {
+        return res.status(400).json({
+            message: "You can only upload from one source, either 'mylibrary' or local files, not both."
+        });
+    }
       
        if (!id) {
         return res.status(400).json({
@@ -365,13 +373,10 @@ const updatedFeed = asyncHandler(async (req, res) => {
             message: "All fields are required."
         });   
     }
-     // Check if files are provided
-     if (!req.files || req.files.length === 0) {
-        return res.status(400).json({
-            message: "Files are required."
-        });
-    }
-
+     
+       // Start transaction
+       const transaction = await sequelize.transaction();
+    
     try {
         const feed = await MyFeeds.findOne({ where: { id: id } }, { transaction });
 
@@ -389,6 +394,22 @@ const updatedFeed = asyncHandler(async (req, res) => {
             link: link,
             describtion: describtion
         }, { transaction });
+
+        // Handle assets_feed (mylibrary) if provided
+    if (assets_feed && assets_feed.length > 0) {
+        const parsedAssets = assets_feed.map(asset => {
+            const parsedAsset = JSON.parse(asset);
+            return {
+                title: project_title,
+                path: parsedAsset.path,
+                filename: parsedAsset.filename,
+                size: parsedAsset.size,
+                folderId: folder_id,
+                feedId: feed.id
+            };
+        });
+        await Assect_Feed.bulkCreate(parsedAssets, { transaction });
+    }
 
         if (req.files && req.files.length > 0) {
             // Delete existing associated images
@@ -1488,10 +1509,17 @@ const GetMyHighlightCount = asyncHandler(async (req, res) => {
 
 const updatedHighlight = asyncHandler(async (req, res) => {
     const { id } = req.body;
-    const { project_title, project_name, developer, community, city, link, folder_id } = req.body;
-      //console.log(req.body)
-       // Start transaction
-       const transaction = await sequelize.transaction();
+    const { project_title, project_name, developer, community, city, link, folder_id, assets_highlight } = req.body;
+      // Validate that either assets_feed or req.files is provided
+    if ((!assets_highlight || assets_highlight.length === 0) && (!req.files || req.files.length === 0)) {
+        return res.status(400).json({ message: "At least one source of files is required (mylibrary or local files)." });
+    }
+
+    if (assets_highlight && assets_highlight.length > 0 && req.files && req.files.length > 0) {
+        return res.status(400).json({
+            message: "You can only upload from one source, either 'mylibrary' or local files, not both."
+        });
+    }
      
        if (!id) {
         return res.status(400).json({
@@ -1504,18 +1532,16 @@ const updatedHighlight = asyncHandler(async (req, res) => {
             message: "All fields are required."
         });   
     }
-     // Check if files are provided
-     if (!req.files || req.files.length === 0) {
-        return res.status(400).json({
-            message: "Files are required."
-        });
-    }
+
+    // Start transaction
+    const transaction = await sequelize.transaction();
+     
 
     try {
         const highlight = await MyHighlight.findOne({ where: { id: id } }, { transaction });
 
         if (!highlight) {
-            return res.json(new ApiResponse(403, null, "Highlight ID(s) not Found."));
+            return res.json(new ApiResponse(403, null, "Highlight Data not Found."));
         }
 
         // Update the feed details
@@ -1527,6 +1553,23 @@ const updatedHighlight = asyncHandler(async (req, res) => {
             link: link,
             city: city
         }, { transaction });
+
+
+         // Handle assets_feed (mylibrary) if provided
+     if (assets_highlight && assets_highlight.length > 0) {
+        const parsedAssets = assets_highlight.map(asset => {
+            const parsedAsset = JSON.parse(asset);
+            return {
+                title: project_title,
+                path: parsedAsset.path,
+                filename: parsedAsset.filename,
+                size: parsedAsset.size,
+                folderId: folder_id,
+                feedId: feed.id
+            };
+        });
+        await Assect_Highlight.bulkCreate(parsedAssets, { transaction });
+    }
 
         if (req.files && req.files.length > 0) {
             // Delete existing associated images
