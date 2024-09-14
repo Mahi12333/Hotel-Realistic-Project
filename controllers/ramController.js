@@ -327,7 +327,7 @@ const getFeedDetails_byid = asyncHandler(async (req, res) => {
         community: feed.community,
         city: feed.city,
         link: feed.link,
-        description: feed.description,
+        describtion: feed.describtion,
         createdAt: feed.createdAt,
         totalLikeCount,
         totalShareCount,
@@ -1300,7 +1300,7 @@ const get_highLightDetails_byid = asyncHandler(async (req, res) => {
 
     const highlight = await MyHighlight.findAll({
         where: { id: highlight_id },
-        attributes: ['id', 'project_name', 'project', 'developer', 'community', 'city', 'link', 'createdAt'], // Removed empty string
+        attributes: ['id', 'title', 'project', 'developer', 'community', 'city', 'link', 'createdAt'], // Removed empty string
         include: [{
             model: Assect_Highlight,
             attributes: ['id', 'title', 'path', 'filename'],
@@ -1322,11 +1322,30 @@ const get_highLightDetails_byid = asyncHandler(async (req, res) => {
         where: { pid: highlight_id, type: 'highlights' } // Filter by feed ID and type if necessary
     });
 
-    const response={
-        highlight,
+
+    const response = {
+        id: highlight.id,
+        title: highlight.title,
+        project: highlight.project,
+        developer: highlight.developer,
+        community: highlight.community,
+        city: highlight.city,
+        link: highlight.link,
+        createdAt: feed.createdAt,
         totalLikeCount,
-        totalShareCount
-    }
+        totalShareCount,
+        Assect_Highlight: highlight.Assect_Highlight.map(asset => ({
+            id: asset.id,
+            title: asset.title,
+            path: asset.path,
+            filename: asset.filename,
+            folder: asset.Folder ? {
+                id: asset.Folder.id,
+                name: asset.Folder.name
+            } : null
+        }))
+    };
+
 
     return res.json(new ApiResponse(200, response, "highlight details retrieved successfully."));
 });
