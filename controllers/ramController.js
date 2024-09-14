@@ -1298,15 +1298,15 @@ const get_highLightDetails_byid = asyncHandler(async (req, res) => {
     return res.json(new ApiResponse(403, null, "highlight id is required.."));
    }
 
-    const highlight = await MyHighlight.findAll({
+    const highlight = await MyHighlight.findOne({
         where: { id: highlight_id },
         attributes: ['id', 'title', 'project', 'developer', 'community', 'city', 'link', 'createdAt'], // Removed empty string
         include: [{
             model: Assect_Highlight,
-            attributes: ['id', 'title', 'path', 'filename'],
+            attributes: ['title', 'path', 'filename'],
             include: [{
                 model: Folder,  // Include 'Folder' properly
-                attributes: ['id', 'name']
+                attributes: ['name']
             }]
         }]
     });
@@ -1322,6 +1322,12 @@ const get_highLightDetails_byid = asyncHandler(async (req, res) => {
         where: { pid: highlight_id, type: 'highlights' } // Filter by feed ID and type if necessary
     });
 
+    // const ddd={
+    //     highlight,
+    //     totalLikeCount,
+    //     totalShareCount
+    // }
+
 
     const response = {
         id: highlight.id,
@@ -1334,7 +1340,7 @@ const get_highLightDetails_byid = asyncHandler(async (req, res) => {
         createdAt: highlight.createdAt,
         totalLikeCount,
         totalShareCount,
-        Assect_Highlight: highlight.Assect_Highlight.map(asset => ({
+        Assect_Highlights: highlight.Assect_Highlights.map(asset => ({
             id: asset.id,
             title: asset.title,
             path: asset.path,
