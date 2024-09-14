@@ -397,6 +397,8 @@ const updatedFeed = asyncHandler(async (req, res) => {
 
         // Handle assets_feed (mylibrary) if provided
     if (assets_feed && assets_feed.length > 0) {
+        await Assect_Feed.destroy({ where: { feedId: id } }, { transaction });
+
         const parsedAssets = assets_feed.map(asset => {
             const parsedAsset = JSON.parse(asset);
             return {
@@ -1582,6 +1584,7 @@ const updatedHighlight = asyncHandler(async (req, res) => {
 
          // Handle assets_feed (mylibrary) if provided
      if (assets_highlight && assets_highlight.length > 0) {
+        await Assect_Highlight.destroy({ where: { highlightId: id } }, { transaction });
         const parsedAssets = assets_highlight.map(asset => {
             const parsedAsset = JSON.parse(asset);
             return {
