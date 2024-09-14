@@ -677,7 +677,7 @@ const Draft_fetchFeeds_highlight = asyncHandler(async (req, res) => {
 });
 
 const GetMyFeedsCount_highlight = asyncHandler(async (req, res) => {
-    const { type } = req.query;
+    const { type } = req.body;
 
     // Validate type
     if (!type) {
