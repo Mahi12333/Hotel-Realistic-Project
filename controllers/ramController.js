@@ -1331,7 +1331,7 @@ const get_highLightDetails_byid = asyncHandler(async (req, res) => {
         community: highlight.community,
         city: highlight.city,
         link: highlight.link,
-        createdAt: feed.createdAt,
+        createdAt: highlight.createdAt,
         totalLikeCount,
         totalShareCount,
         Assect_Highlight: highlight.Assect_Highlight.map(asset => ({
