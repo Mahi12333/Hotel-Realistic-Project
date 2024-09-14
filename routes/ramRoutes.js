@@ -105,7 +105,7 @@ router.post('/delete-folder-id', Delete_folder_byId);
 router.post('/preview-folder-id', Preview_folder_byId);
 router.put('/updatedfolder', updated_folder);
 router.post('/likes-feed', CreateLikesFeed);
-router.post('/myhighliht', upload.array('assets_feed'), create_myheighlight);
+router.post('/myhighlight', upload.array('assets_feed'), create_myheighlight);
 router.post('/save_myhighliht_draft', upload.array('assets_feed'), save_letter_myhighlight);
 router.post('/highlight_details_byid', get_highLightDetails_byid);
 router.delete('/deletehighlights', deleteHighlight);  

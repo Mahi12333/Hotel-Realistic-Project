@@ -1305,10 +1305,10 @@ const get_highLightDetails_byid = asyncHandler(async (req, res) => {
         attributes: ['id', 'title', 'project', 'developer', 'community', 'city', 'link', 'createdAt'], // Removed empty string
         include: [{
             model: Assect_Highlight,
-            attributes: ['title', 'path', 'filename'],
+            attributes: ['id', 'title', 'path', 'filename'],
             include: [{
                 model: Folder,  // Include 'Folder' properly
-                attributes: ['name']
+                attributes: ['id', 'name']
             }]
         }]
     });
