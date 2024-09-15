@@ -1181,7 +1181,7 @@ const CreateLikesFeed = asyncHandler(async (req, res) => {
   });
 
   const create_myheighlight = asyncHandler(async (req, res) => {
-    const { project_title, project_name, developer, city, community, link, folder_id, assets_highlight } = req.body;
+    const { project_title, project_name, developer, city, community, link, folder_id, assets_feed } = req.body;
    //console.log(req.body);
   
    //console.log('Uploaded Files:', req.files);
@@ -1190,11 +1190,11 @@ const CreateLikesFeed = asyncHandler(async (req, res) => {
         return res.json(new ApiResponse(403, null, "All fields are required."));
     }
      // Validate that either assets_feed or req.files is provided
-    if ((!assets_highlight || assets_highlight.length === 0) && (!req.files || req.files.length === 0)) {
+    if ((!assets_feed || assets_feed.length === 0) && (!req.files || req.files.length === 0)) {
         return res.status(400).json({ message: "At least one source of files is required (mylibrary or local files)." });
     }
 
-    if (assets_highlight && assets_highlight.length > 0 && req.files && req.files.length > 0) {
+    if (assets_feed && assets_feed.length > 0 && req.files && req.files.length > 0) {
         return res.status(400).json({
             message: "You can only upload from one source, either 'mylibrary' or local files, not both."
         });
@@ -1215,8 +1215,8 @@ const CreateLikesFeed = asyncHandler(async (req, res) => {
     }
 
      // Handle assets_feed (mylibrary) if provided
-     if (assets_highlight && assets_highlight.length > 0) {
-        const parsedAssets = assets_highlight.map(asset => {
+     if (assets_feed && assets_feed.length > 0) {
+        const parsedAssets = assets_feed.map(asset => {
             const parsedAsset = JSON.parse(asset);
             return {
                 title: project_title,
