@@ -295,7 +295,7 @@ const getFeedDetails_byid = asyncHandler(async (req, res) => {
  
     const feed = await MyFeeds.findOne({
         where: { id: feed_id },
-        attributes: ['id','source_type', 'title', 'project', 'developer', 'community', 'city', 'link', 'describtion', 'createdAt'], // Removed empty string
+        attributes: ['id','source_type', 'title', 'project', 'developer', 'community', 'city', 'link', 'describtion','status', 'is_publish', 'createdAt'], // Removed empty string
         include: [{
             model: Assect_Feed,
             attributes: ['id', 'title', 'path', 'filename'],
@@ -329,6 +329,8 @@ const getFeedDetails_byid = asyncHandler(async (req, res) => {
         link: feed.link,
         describtion: feed.describtion,
         createdAt: feed.createdAt,
+        status: feed.status,
+        is_publish: feed.is_publish,
         totalLikeCount,
         totalShareCount,
         Assect_Feeds: feed.Assect_Feeds.map(asset => ({
@@ -1322,7 +1324,7 @@ const get_highLightDetails_byid = asyncHandler(async (req, res) => {
 
     const highlight = await MyHighlight.findOne({
         where: { id: highlight_id },
-        attributes: ['id', 'title', 'project', 'developer', 'community', 'city', 'link', 'createdAt'], // Removed empty string
+        attributes: ['id', 'title', 'project', 'developer', 'community', 'city', 'link', 'status', 'is_publish', 'createdAt'], // Removed empty string
         include: [{
             model: Assect_Highlight,
             attributes: ['id', 'title', 'path', 'filename'],
@@ -1360,6 +1362,8 @@ const get_highLightDetails_byid = asyncHandler(async (req, res) => {
         city: highlight.city,
         link: highlight.link,
         createdAt: highlight.createdAt,
+        status: highlight.status,
+        is_publish: highlight.is_publish,
         totalLikeCount,
         totalShareCount,
         Assect_Highlights: highlight.Assect_Highlights.map(asset => ({
