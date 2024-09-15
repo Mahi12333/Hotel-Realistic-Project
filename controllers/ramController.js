@@ -848,10 +848,6 @@ const Get_folder = asyncHandler(async (req, res) => {
         whereClause.createdAt = { [Op.gte]: new Date(new Date().setFullYear(new Date().getFullYear() - 1)) }; // Last year
     }
 
-    // Sorting logic based on name
-    if (name) {
-        orderClause.push(['name', name === 'asc' ? 'ASC' : 'DESC']);
-    }
 
     // Fetch total number of records to handle pagination correctly
     const totalFolders = await Folder.count({
@@ -865,6 +861,22 @@ const Get_folder = asyncHandler(async (req, res) => {
         limit,
         offset
     });
+   
+    folders.sort((a, b) => {
+        if (name) {
+            // Perform case-insensitive comparison
+            const nameA = a.name.toLowerCase();
+            const nameB = b.name.toLowerCase();
+            
+            if (name === 'asc') {
+                return nameA.localeCompare(nameB);  // Ascending order
+            } else {
+                return nameB.localeCompare(nameA);  // Descending order
+            }
+        }
+        return 0;
+    });
+
     // Calculate total pages
     const totalPages = Math.ceil(totalFolders / limit);
     // Return the folders along with pagination details
@@ -988,25 +1000,24 @@ const file_upload_folder= asyncHandler(async(req,res)=>{
     return res.json(new ApiResponse(201, uploadedFiles, "Files uploaded successfully to folder(s)."));
 })
 
-
 const Get_file = asyncHandler(async (req, res) => {
     const { folder_id, today_data, last_7_days, last_month, last_3_month, last_year, name, size, page = 1 } = req.body;
-    const limit = 4;  // Set limit per page
+    const limit = 16;  // Set limit per page
     const offset = (parseInt(page) - 1) * limit;
 
-    // Check if folder exists
+    // Step 1: Check if the folder exists
     const folder = await Folder.findOne({ where: { id: folder_id } });
     if (!folder) {
         return res.json(new ApiResponse(403, null, "Folder not found."));
     }
 
-    // Construct filter and sort conditions
+    // Step 2: Construct filter (where) and sorting (order) conditions
     let whereClause = { folderId: folder_id };  // Filter by folder ID
     let orderClause = [];
 
-    // Filtering logic based on date
+    // Step 3: Filtering logic based on the provided date range
     if (today_data) {
-        whereClause.createdAt = { [Op.gte]: new Date().setHours(0, 0, 0, 0) };  // Today
+        whereClause.createdAt = { [Op.gte]: new Date().setHours(0, 0, 0, 0) };  // Today's data
     } else if (last_7_days) {
         whereClause.createdAt = { [Op.gte]: new Date(new Date() - 7 * 24 * 60 * 60 * 1000) };  // Last 7 days
     } else if (last_month) {
@@ -1017,53 +1028,63 @@ const Get_file = asyncHandler(async (req, res) => {
         whereClause.createdAt = { [Op.gte]: new Date(new Date().setFullYear(new Date().getFullYear() - 1)) };  // Last year
     }
 
-    // Sorting logic based on name or size
-    if (name) {
-        orderClause.push(['filename', name === 'asc' ? 'ASC' : 'DESC']);
-    }
-    if (size) {
-        orderClause.push(['size', size === 'asc' ? 'ASC' : 'DESC']);
-    }
 
-    // Fetch images, feeds, and highlights with pagination
-    const [files, feedFiles, highlightFiles, totalImageCount, totalFeedCount, totalHighlightCount] = await Promise.all([
-        Assect_image.findAll({
-            where: whereClause,
-            attributes: ['id', 'path', 'filename', 'size'],
-            include: [{ model: Folder, attributes: ['id', 'name'] }],
-            order: orderClause.length ? orderClause : [['createdAt', 'DESC']],
-            limit,
-            offset
-        }),
-        Assect_Feed.findAll({
-            where: whereClause,
-            attributes: ['id', 'path', 'filename', 'size'],
-            include: [{ model: Folder, attributes: ['id', 'name'] }],
-            order: orderClause.length ? orderClause : [['createdAt', 'DESC']],
-            limit,
-            offset
-        }),
-        Assect_Highlight.findAll({
-            where: whereClause,
-            attributes: ['id', 'path', 'filename', 'size'],
-            include: [{ model: Folder, attributes: ['id', 'name'] }],
-            order: orderClause.length ? orderClause : [['createdAt', 'DESC']],
-            limit,
-            offset
-        }),
-        Assect_image.count({ where: whereClause }),  // Total images count
-        Assect_Feed.count({ where: whereClause }),   // Total feeds count
-        Assect_Highlight.count({ where: whereClause })    // Total highlights count
-    ]);
+    // Step 5: Fetch files from different models (images, feeds, highlights)
+    const assetImages = await Assect_image.findAll({
+        where: whereClause,
+        attributes: ['id', 'path', 'filename', 'size'],
+        include: [{ model: Folder, attributes: ['id', 'name'] }],
+        limit,
+        offset,
+        order: orderClause
+    });
 
-    // Merge the image, feed, and highlight data
-    const imageFiles = [...files, ...feedFiles, ...highlightFiles];
-
-    // Calculate total pages based on total count and limit
-    const totalRecords = totalImageCount + totalFeedCount + totalHighlightCount;
+    const assetFeeds = await Assect_Feed.findAll({
+        where: whereClause,
+        attributes: ['id', 'path', 'filename', 'size'],
+        include: [{ model: Folder, attributes: ['id', 'name'] }],
+        limit,
+        offset,
+        order: orderClause
+    });
+  
+    const assetHighlights = await Assect_Highlight.findAll({
+        where: whereClause,
+        attributes: ['id', 'path', 'filename', 'size'],
+        include: [{ model: Folder, attributes: ['id', 'name'] }],
+        limit,
+        offset,
+        order: orderClause
+    });
+    // Step 6: Combine results and calculate total records
+    const imageFiles = [...assetImages, ...assetFeeds, ...assetHighlights];
+    const totalRecords = assetImages.length + assetFeeds.length + assetHighlights.length;
     const totalPages = Math.ceil(totalRecords / limit);
+    
+    imageFiles.sort((a, b) => {
+        if (name) {
+            // Perform case-insensitive comparison
+            const nameA = a.filename.toLowerCase();
+            const nameB = b.filename.toLowerCase();
+            
+            if (name === 'asc') {
+                return nameA.localeCompare(nameB);  // Ascending order
+            } else {
+                return nameB.localeCompare(nameA);  // Descending order
+            }
+        }
+        return 0;
+    });
 
-    // Return the response with paginated data
+     // Step 7: Sort the combined results according to the sorting logic
+     imageFiles.sort((a, b) => {
+        if (size) {
+            return size === 'asc' ? a.size - b.size : b.size - a.size;
+        }
+        return 0;
+    });
+
+    // Step 8: Return the response
     return res.json(new ApiResponse(200, {
         files: imageFiles,
         currentPage: page,
@@ -1071,7 +1092,6 @@ const Get_file = asyncHandler(async (req, res) => {
         totalRecords
     }, "Files fetched and sorted successfully."));
 });
-
 
 const Delete_file=asyncHandler(async(req,res)=>{
     const { all_file_id, folder_id } = req.body;
@@ -1118,7 +1138,7 @@ const Delete_file=asyncHandler(async(req,res)=>{
     }
 
     // Return a response with the deleted files
-    return res.json(new ApiResponse(200, deletedFiles, "files successfully deleted."));
+    return res.json(new ApiResponse(200, null, "files successfully deleted."));
   
 });
 
@@ -1593,7 +1613,7 @@ const updatedHighlight = asyncHandler(async (req, res) => {
                 filename: parsedAsset.filename,
                 size: parsedAsset.size,
                 folderId: folder_id,
-                feedId: feed.id
+                feedId: highlight.id
             };
         });
         await Assect_Highlight.bulkCreate(parsedAssets, { transaction });
@@ -1662,15 +1682,34 @@ const AddLikesHighlight = asyncHandler(async (req, res) => {
     }
   });
 
-  const highlightDeactivate = asyncHandler(async (req, res) => {
-    const { id } = req.body;
+  const highlightActivate = asyncHandler(async (req, res) => {
+    const { id,type } = req.body;
   
     const highlightbyId = await MyHighlight.findByPk(id);
     if (!highlightbyId) {
       return res.json(new ApiResponse(403, null, "No highlight found with the provided ID."));
     }
+    if(type === 'active'){
+       // Deactivate the feed by setting status to 0
+    highlightbyId.status = 1;
+    highlightbyId.is_publish= 1;
+    await highlightbyId.save();
   
-    // Deactivate the feed by setting status to 0
+    return res.json(
+      new ApiResponse(200, highlightbyId, "Highlight activated successfully")
+    );
+    }else if(type === 'draft')
+    {
+         // Draft the feed by setting status to 2 and 
+    highlightbyId.status = 2;
+    highlightbyId.is_publish= 0;
+    await highlightbyId.save();
+  
+    return res.json(
+      new ApiResponse(200, highlightbyId, "Highlight draft successfully")
+    );
+    }else if(type === 'inactive'){
+          // Deactivate the feed by setting status to 0
     highlightbyId.status = 0;
     highlightbyId.is_publish= 0;
     await highlightbyId.save();
@@ -1678,96 +1717,45 @@ const AddLikesHighlight = asyncHandler(async (req, res) => {
     return res.json(
       new ApiResponse(200, highlightbyId, "Highlight deactivated successfully")
     );
+    }
+   
   });
 
-  const highlightActivate = asyncHandler(async (req, res) => {
-    const { id } = req.body;
-  
-    const highlightbyId = await MyHighlight.findByPk(id);
-    if (!highlightbyId) {
-      return res.json(new ApiResponse(403, null, "No highlight found with the provided ID."));
-    }
-  
-    // Deactivate the feed by setting status to 0
-    highlightbyId.status = 1;
-    highlightbyId.is_publish= 1;
-    await highlightbyId.save();
-  
-    return res.json(
-      new ApiResponse(200, highlightbyId, "Highlight deactivated successfully")
-    );
-  });
-  
-  const highlightDraft = asyncHandler(async (req, res) => {
-    const { id } = req.body;
-  
-    const highlightbyId = await MyHighlight.findByPk(id);
-    if (!highlightbyId) {
-      return res.json(new ApiResponse(403, null, "No highlight found with the provided ID."));
-    }
-  
-    // Draft the feed by setting status to 2 and 
-    highlightbyId.status = 2;
-    highlightbyId.is_publish= 0;
-    await highlightbyId.save();
-  
-    return res.json(
-      new ApiResponse(200, highlightbyId, "Highlight deactivated successfully")
-    );
-  });
 
-  const feedsDeactivate = asyncHandler(async (req, res) => {
-    const { id } = req.body;
-  
-    const feedbyId = await MyFeeds.findByPk(id);
-    if (!feedbyId) {
-      return res.json(new ApiResponse(403, null, "No feed found with the provided ID."));
-    }
-  
-    // Deactivate the feed by setting status to 0
-    feedbyId.status = 0;
-    feedbyId.is_publish = 0;
-    await feedbyId.save();
-  
-    return res.json(
-      new ApiResponse(200, feedbyId, "Feed deactivated successfully")
-    );
-  });
-  
   const feedsActivate = asyncHandler(async (req, res) => {
-    const { id } = req.body;
+    const { id, type } = req.body;
   
     const feedbyId = await MyFeeds.findByPk(id);
     if (!feedbyId) {
         return res.json(new ApiResponse(403, null, "No feed found with the provided ID."));
     }
   
-    // Deactivate the feed by setting status to 0
+    if(type === 'active'){
     feedbyId.status = 1;
     feedbyId.is_publish = 1;
     await feedbyId.save();
   
     return res.json(
-      new ApiResponse(200, feedbyId, "Feed deactivated successfully")
+      new ApiResponse(200, feedbyId, "Feed activated successfully")
     );
-  });
-
-  const feedsDraft = asyncHandler(async (req, res) => {
-    const { id } = req.body;
-  
-    const feedbyId = await MyFeeds.findByPk(id);
-    if (!feedbyId) {
-        return res.json(new ApiResponse(403, null, "No feed found with the provided ID."));
+    }else if(type === 'inactive'){
+        feedbyId.status = 0;
+        feedbyId.is_publish = 0;
+        await feedbyId.save();
+      
+        return res.json(
+          new ApiResponse(200, feedbyId, "Feed deactivated successfully")
+        );
+    }else if(type === 'draft'){
+        feedbyId.status = 2;
+        feedbyId.is_publish = 0;
+        await feedbyId.save();
+      
+        return res.json(
+          new ApiResponse(200, feedbyId, "Feed draft successfully")
+        );
     }
-  
-    // Deactivate the feed by setting status to 0
-    feedbyId.status = 2;
-    feedbyId.is_publish = 0;
-    await feedbyId.save();
-  
-    return res.json(
-      new ApiResponse(200, feedbyId, "Feed deactivated successfully")
-    );
+    
   });
 
   const Publish_Highlight = asyncHandler(async (req, res) => {
@@ -2085,11 +2073,11 @@ export {
     updatedHighlight,
     AddLikesHighlight,
     feedsActivate,
-    feedsDraft,
-    feedsDeactivate,
+    // feedsDraft,
+    // feedsDeactivate,
     highlightActivate,
-    highlightDeactivate,
-    highlightDraft,
+    // highlightDeactivate,
+    // highlightDraft,
     Publish_Highlight,
     Publish_Feeds,
     Add_ShareFeeds,
