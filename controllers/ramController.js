@@ -1224,7 +1224,7 @@ const CreateLikesFeed = asyncHandler(async (req, res) => {
                 filename: parsedAsset.filename,
                 size: parsedAsset.size,
                 folderId: folder_id,
-                feedId: highlight.id
+                highlightId: highlight.id
             };
         });
         await Assect_Highlight.bulkCreate(parsedAssets);
@@ -1252,7 +1252,7 @@ const CreateLikesFeed = asyncHandler(async (req, res) => {
 
 
 const save_letter_myhighlight = asyncHandler(async (req, res) => {
-    const { project_title, project_name, developer, community, city, link, folder_id, assets_highlight } = req.body;
+    const { project_title, project_name, developer, community, city, link, folder_id, assets_feed } = req.body;
      //console.log(req.body)
   
     // Create a single feed
@@ -1267,7 +1267,7 @@ const save_letter_myhighlight = asyncHandler(async (req, res) => {
         is_publish: 0
     });
 
-    if (assets_highlight && assets_highlight.length > 0 && req.files && req.files.length > 0) {
+    if (assets_feed && assets_feed.length > 0 && req.files && req.files.length > 0) {
         return res.status(400).json({
             message: "You can only upload from one source, either 'mylibrary' or local files, not both."
         });
@@ -1286,8 +1286,8 @@ const save_letter_myhighlight = asyncHandler(async (req, res) => {
         }));
 
         await Assect_Highlight.bulkCreate(assetImages);
-    }else if (assets_highlight && assets_highlight.length > 0) {
-        const parsedAssets = assets_highlight.map(asset => {
+    }else if (assets_feed && assets_feed.length > 0) {
+        const parsedAssets = assets_feed.map(asset => {
             const parsedAsset = JSON.parse(asset);
             return {
                 title: project_title,
@@ -1295,7 +1295,7 @@ const save_letter_myhighlight = asyncHandler(async (req, res) => {
                 filename: parsedAsset.filename,
                 size: parsedAsset.size,
                 folderId: folder_id,
-                feedId: feed.id
+                highlightId: highlight.id
             };
         });
         await Assect_Highlight.bulkCreate(parsedAssets);
@@ -1613,7 +1613,7 @@ const updatedHighlight = asyncHandler(async (req, res) => {
                 filename: parsedAsset.filename,
                 size: parsedAsset.size,
                 folderId: folder_id,
-                feedId: highlight.id
+                highlightId: highlight.id
             };
         });
         await Assect_Highlight.bulkCreate(parsedAssets, { transaction });
