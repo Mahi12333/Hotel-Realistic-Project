@@ -50,6 +50,6 @@ const MyHighlight = sequelize.define('MyHighlight', {
 );
 
 // MyHighlight.sync();
-// MyHighlight.sync({ alter: true });
+MyHighlight.sync({ alter: true });
 // MyHighlight.sync({ force: false}); 
 export default MyHighlight

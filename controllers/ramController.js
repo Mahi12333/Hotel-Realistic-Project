@@ -1182,10 +1182,14 @@ const CreateLikesFeed = asyncHandler(async (req, res) => {
     }
   });
 
+
   const create_myheighlight = asyncHandler(async (req, res) => {
     const { project_title, project_name, developer, city, community, link, folder_id, assets_feed } = req.body;
    //console.log(req.body);
-  
+   const resdd={
+    project_title, project_name, developer, city, community, link, folder_id, assets_feed
+   }
+   return res.json(new ApiResponse(403, resdd, "Data submission failed."));
    //console.log('Uploaded Files:', req.files);
     // Validate the required fields
     if (!city || !project_title || !project_name || !developer || !community || !folder_id || !link) {
