@@ -190,20 +190,28 @@ const create_myfeeds = asyncHandler(async (req, res) => {
     }
 
 
+    // Normalize assets_feed to be an array if it's a single object
+    const normalizedAssetsFeed = Array.isArray(assets_feed) ? assets_feed : [assets_feed];
+
     // Handle assets_feed (mylibrary) if provided
     if (assets_feed && assets_feed.length > 0) {
-        const parsedAssets = assets_feed.map(asset => {
-            const parsedAsset = JSON.parse(asset);
-            return {
-                title: project_title,
-                path: parsedAsset.path,
-                filename: parsedAsset.filename,
-                size: parsedAsset.size,
-                folderId: folder_id,
-                feedId: feed.id
-            };
-        });
-        await Assect_Feed.bulkCreate(parsedAssets);
+        const parsedAssets = [];
+        for (const asset of normalizedAssetsFeed) {
+            console.log("kkk",asset)
+                // If the asset is a string, parse it; otherwise, use it directly
+                const parsedAsset = typeof asset === 'string' ? JSON.parse(asset) : asset;
+                parsedAssets.push({
+                    title: project_title,
+                    path: parsedAsset.path,
+                    filename: parsedAsset.filename,
+                    size: parsedAsset.size,
+                    folderId: folder_id,
+                    feedId: feed.id
+                });
+        }
+        if (parsedAssets.length > 0) {
+            await Assect_Feed.bulkCreate(parsedAssets);
+        }
     }
 
 
@@ -247,19 +255,28 @@ const save_letter_myfeeds = asyncHandler(async (req, res) => {
         is_publish: 0
     });
 
+    // Normalize assets_feed to be an array if it's a single object
+    const normalizedAssetsFeed = Array.isArray(assets_feed) ? assets_feed : [assets_feed];
+
+    // Handle assets_feed (mylibrary) if provided
     if (assets_feed && assets_feed.length > 0) {
-        const parsedAssets = assets_feed.map(asset => {
-            const parsedAsset = JSON.parse(asset);
-            return {
-                title: project_title,
-                path: parsedAsset.path,
-                filename: parsedAsset.filename,
-                size: parsedAsset.size,
-                folderId: folder_id,
-                feedId: feed.id
-            };
-        });
-        await Assect_Feed.bulkCreate(parsedAssets);
+        const parsedAssets = [];
+        for (const asset of normalizedAssetsFeed) {
+            console.log("kkk",asset)
+                // If the asset is a string, parse it; otherwise, use it directly
+                const parsedAsset = typeof asset === 'string' ? JSON.parse(asset) : asset;
+                parsedAssets.push({
+                    title: project_title,
+                    path: parsedAsset.path,
+                    filename: parsedAsset.filename,
+                    size: parsedAsset.size,
+                    folderId: folder_id,
+                    feedId: feed.id
+                });
+        }
+        if (parsedAssets.length > 0) {
+            await Assect_Feed.bulkCreate(parsedAssets);
+        }
     }else if (req.files && req.files.length > 0) {
         const assetImages = req.files.map(image => ({
             title: project_title,
@@ -397,22 +414,28 @@ const updatedFeed = asyncHandler(async (req, res) => {
             describtion: describtion
         }, { transaction });
 
-        // Handle assets_feed (mylibrary) if provided
-    if (assets_feed && assets_feed.length > 0) {
-        await Assect_Feed.destroy({ where: { feedId: id } }, { transaction });
+      // Normalize assets_feed to be an array if it's a single object
+    const normalizedAssetsFeed = Array.isArray(assets_feed) ? assets_feed : [assets_feed];
 
-        const parsedAssets = assets_feed.map(asset => {
-            const parsedAsset = JSON.parse(asset);
-            return {
-                title: project_title,
-                path: parsedAsset.path,
-                filename: parsedAsset.filename,
-                size: parsedAsset.size,
-                folderId: folder_id,
-                feedId: feed.id
-            };
-        });
-        await Assect_Feed.bulkCreate(parsedAssets, { transaction });
+    // Handle assets_feed (mylibrary) if provided
+    if (assets_feed && assets_feed.length > 0) {
+        const parsedAssets = [];
+        for (const asset of normalizedAssetsFeed) {
+            console.log("kkk",asset)
+                // If the asset is a string, parse it; otherwise, use it directly
+                const parsedAsset = typeof asset === 'string' ? JSON.parse(asset) : asset;
+                parsedAssets.push({
+                    title: project_title,
+                    path: parsedAsset.path,
+                    filename: parsedAsset.filename,
+                    size: parsedAsset.size,
+                    folderId: folder_id,
+                    feedId: feed.id
+                });
+        }
+        if (parsedAssets.length > 0) {
+            await Assect_Feed.bulkCreate(parsedAssets);
+        }
     }
 
         if (req.files && req.files.length > 0) {
@@ -1186,10 +1209,7 @@ const CreateLikesFeed = asyncHandler(async (req, res) => {
   const create_myheighlight = asyncHandler(async (req, res) => {
     const { project_title, project_name, developer, city, community, link, folder_id, assets_feed } = req.body;
    //console.log(req.body);
-   const resdd={
-    project_title, project_name, developer, city, community, link, folder_id, assets_feed
-   }
-   return res.json(new ApiResponse(403, resdd, "Data submission failed."));
+
    //console.log('Uploaded Files:', req.files);
     // Validate the required fields
     if (!city || !project_title || !project_name || !developer || !community || !folder_id || !link) {
@@ -1220,21 +1240,29 @@ const CreateLikesFeed = asyncHandler(async (req, res) => {
         return res.json(new ApiResponse(403, null, "Data submission failed."));
     }
 
+     // Normalize assets_feed to be an array if it's a single object
+     const normalizedAssetsFeed = Array.isArray(assets_feed) ? assets_feed : [assets_feed];
+
      // Handle assets_feed (mylibrary) if provided
      if (assets_feed && assets_feed.length > 0) {
-        const parsedAssets = assets_feed.map(asset => {
-            const parsedAsset = JSON.parse(asset);
-            return {
-                title: project_title,
-                path: parsedAsset.path,
-                filename: parsedAsset.filename,
-                size: parsedAsset.size,
-                folderId: folder_id,
-                highlightId: highlight.id
-            };
-        });
-        await Assect_Highlight.bulkCreate(parsedAssets);
-    }
+         const parsedAssets = [];
+         for (const asset of normalizedAssetsFeed) {
+             
+                 // If the asset is a string, parse it; otherwise, use it directly
+                 const parsedAsset = typeof asset === 'string' ? JSON.parse(asset) : asset;
+                 parsedAssets.push({
+                     title: project_title,
+                     path: parsedAsset.path,
+                     filename: parsedAsset.filename,
+                     size: parsedAsset.size,
+                     folderId: folder_id,
+                     highlightId: highlight.id
+                 });
+         }
+         if (parsedAssets.length > 0) {
+             await Assect_Highlight.bulkCreate(parsedAssets);
+         }
+     }
 
 
 
@@ -1293,18 +1321,29 @@ const save_letter_myhighlight = asyncHandler(async (req, res) => {
 
         await Assect_Highlight.bulkCreate(assetImages);
     }else if (assets_feed && assets_feed.length > 0) {
-        const parsedAssets = assets_feed.map(asset => {
-            const parsedAsset = JSON.parse(asset);
-            return {
-                title: project_title,
-                path: parsedAsset.path,
-                filename: parsedAsset.filename,
-                size: parsedAsset.size,
-                folderId: folder_id,
-                highlightId: highlight.id
-            };
-        });
-        await Assect_Highlight.bulkCreate(parsedAssets);
+         // Normalize assets_feed to be an array if it's a single object
+     const normalizedAssetsFeed = Array.isArray(assets_feed) ? assets_feed : [assets_feed];
+
+     // Handle assets_feed (mylibrary) if provided
+     if (normalizedAssetsFeed.length > 0) {
+         const parsedAssets = [];
+         for (const asset of normalizedAssetsFeed) {
+             
+                 // If the asset is a string, parse it; otherwise, use it directly
+                 const parsedAsset = typeof asset === 'string' ? JSON.parse(asset) : asset;
+                 parsedAssets.push({
+                     title: project_title,
+                     path: parsedAsset.path,
+                     filename: parsedAsset.filename,
+                     size: parsedAsset.size,
+                     folderId: folder_id,
+                     highlightId: highlight.id
+                 });
+         }
+         if (parsedAssets.length > 0) {
+             await Assect_Highlight.bulkCreate(parsedAssets);
+         }
+     }
     }else{
         await Assect_Highlight.create({
             title: project_title,
@@ -1610,22 +1649,30 @@ const updatedHighlight = asyncHandler(async (req, res) => {
         }, { transaction });
 
 
-         // Handle assets_feed (mylibrary) if provided
+       // Normalize assets_feed to be an array if it's a single object
+     const normalizedAssetsFeed = Array.isArray(assets_feed) ? assets_feed : [assets_feed];
+
+     // Handle assets_feed (mylibrary) if provided
      if (assets_feed && assets_feed.length > 0) {
-        await Assect_Highlight.destroy({ where: { highlightId: id } }, { transaction });
-        const parsedAssets = assets_feed.map(asset => {
-            const parsedAsset = JSON.parse(asset);
-            return {
-                title: project_title,
-                path: parsedAsset.path,
-                filename: parsedAsset.filename,
-                size: parsedAsset.size,
-                folderId: folder_id,
-                highlightId: highlight.id
-            };
-        });
-        await Assect_Highlight.bulkCreate(parsedAssets, { transaction });
-    }
+         const parsedAssets = [];
+         for (const asset of normalizedAssetsFeed) {
+             console.log("kkk",asset)
+                 // If the asset is a string, parse it; otherwise, use it directly
+                 const parsedAsset = typeof asset === 'string' ? JSON.parse(asset) : asset;
+                 parsedAssets.push({
+                     title: project_title,
+                     path: parsedAsset.path,
+                     filename: parsedAsset.filename,
+                     size: parsedAsset.size,
+                     folderId: folder_id,
+                     highlightId: highlight.id
+                 });
+         }
+         if (parsedAssets.length > 0) {
+             await Assect_Highlight.bulkCreate(parsedAssets);
+         }
+     }
+
 
         if (req.files && req.files.length > 0) {
             // Delete existing associated images
