@@ -1224,7 +1224,7 @@ const CreateLikesFeed = asyncHandler(async (req, res) => {
                 filename: parsedAsset.filename,
                 size: parsedAsset.size,
                 folderId: folder_id,
-                feedId: feed.id
+                feedId: highlight.id
             };
         });
         await Assect_Highlight.bulkCreate(parsedAssets);
