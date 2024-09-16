@@ -1029,7 +1029,7 @@ const file_upload_folder= asyncHandler(async(req,res)=>{
 
 const Get_file = asyncHandler(async (req, res) => {
     const { folder_id, today_data, last_7_days, last_month, last_3_month, last_year, name, size, page = 1 } = req.body;
-    const limit = 16;  // Set limit per page
+    const limit = 18;  // Set limit per page
     const offset = (parseInt(page) - 1) * limit;
 
     // Step 1: Check if the folder exists
@@ -1040,7 +1040,6 @@ const Get_file = asyncHandler(async (req, res) => {
 
     // Step 2: Construct filter (where) and sorting (order) conditions
     let whereClause = { folderId: folder_id };  // Filter by folder ID
-    let orderClause = [];
 
     // Step 3: Filtering logic based on the provided date range
     if (today_data) {
@@ -1056,71 +1055,59 @@ const Get_file = asyncHandler(async (req, res) => {
     }
 
 
-    // Step 5: Fetch files from different models (images, feeds, highlights)
+    // Step 5: Fetch paginated data from the tables
     const assetImages = await Assect_image.findAll({
         where: whereClause,
         attributes: ['id', 'path', 'filename', 'size'],
-        include: [{ model: Folder, attributes: ['id', 'name'] }],
-        limit,
-        offset,
-        order: orderClause
+        include: [{ model: Folder, attributes: ['id', 'name'] }]
     });
 
     const assetFeeds = await Assect_Feed.findAll({
         where: whereClause,
         attributes: ['id', 'path', 'filename', 'size'],
-        include: [{ model: Folder, attributes: ['id', 'name'] }],
-        limit,
-        offset,
-        order: orderClause
+        include: [{ model: Folder, attributes: ['id', 'name'] }]
     });
-  
+
     const assetHighlights = await Assect_Highlight.findAll({
         where: whereClause,
         attributes: ['id', 'path', 'filename', 'size'],
-        include: [{ model: Folder, attributes: ['id', 'name'] }],
-        limit,
-        offset,
-        order: orderClause
-    });
-    // Step 6: Combine results and calculate total records
-    const imageFiles = [...assetImages, ...assetFeeds, ...assetHighlights];
-    const totalRecords = assetImages.length + assetFeeds.length + assetHighlights.length;
-    const totalPages = Math.ceil(totalRecords / limit);
-    
-    imageFiles.sort((a, b) => {
-        if (name) {
-            // Perform case-insensitive comparison
-            const nameA = a.filename.toLowerCase();
-            const nameB = b.filename.toLowerCase();
-            
-            if (name === 'asc') {
-                return nameA.localeCompare(nameB);  // Ascending order
-            } else {
-                return nameB.localeCompare(nameA);  // Descending order
-            }
-        }
-        return 0;
+        include: [{ model: Folder, attributes: ['id', 'name'] }]
     });
 
-     // Step 7: Sort the combined results according to the sorting logic
-     imageFiles.sort((a, b) => {
-        if (size) {
-            return size === 'asc' ? a.size - b.size : b.size - a.size;
-        }
-        return 0;
-    });
+    // Step 6: Combine the results from all three tables
+    const imageFiles = [...assetImages, ...assetFeeds, ...assetHighlights];
+    
+    // Step 7: Sorting logic (optional)
+    if (name) {
+        imageFiles.sort((a, b) => {
+            const nameA = a.filename.toLowerCase();
+            const nameB = b.filename.toLowerCase();
+            return name === 'asc' ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
+        });
+    }
+
+    if (size) {
+        imageFiles.sort((a, b) => size === 'asc' ? a.size - b.size : b.size - a.size);
+    }
+
+    // Step 6: Apply pagination after combining results
+    const paginatedFiles = imageFiles.slice(offset, offset + limit);
+
+    // Step 7: Calculate total pages
+    const totalRecords = imageFiles.length;
+    const totalPages = Math.ceil(totalRecords / limit);
 
     // Step 8: Return the response
     return res.json(new ApiResponse(200, {
-        files: imageFiles,
+        files: paginatedFiles,
         pagination: {
-            currentPage: parseInt(page),
+            currentPage: page,
             totalPages,
             totalItems: totalRecords
         }
     }, "Files fetched and sorted successfully."));
 });
+
 
 const Delete_file=asyncHandler(async(req,res)=>{
     const { all_file_id, folder_id } = req.body;
