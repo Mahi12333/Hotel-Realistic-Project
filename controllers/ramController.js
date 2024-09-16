@@ -907,9 +907,11 @@ const Get_folder = asyncHandler(async (req, res) => {
     // Return the folders along with pagination details
     return res.json(new ApiResponse(200, {
         folders,
-        currentPage: page, // To make the page 1-indexed
-        totalPages,
-        totalRecords: totalFolders
+        pagination: {
+            currentPage: parseInt(page),
+            totalPages,
+            totalItems: totalFolders
+        }
     }, "All folders successfully displayed"));
 });
 
@@ -1112,9 +1114,11 @@ const Get_file = asyncHandler(async (req, res) => {
     // Step 8: Return the response
     return res.json(new ApiResponse(200, {
         files: imageFiles,
-        currentPage: page,
-        totalPages,
-        totalRecords
+        pagination: {
+            currentPage: parseInt(page),
+            totalPages,
+            totalItems: totalRecords
+        }
     }, "Files fetched and sorted successfully."));
 });
 
