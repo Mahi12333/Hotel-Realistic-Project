@@ -858,7 +858,6 @@ const Get_folder = asyncHandler(async (req, res) => {
 
     // Construct filter and sort conditions
     let whereClause = {};
-    let orderClause = [];
 
     // Filtering logic based on date
     if (tody_data) {
@@ -1053,6 +1052,7 @@ const Get_file = asyncHandler(async (req, res) => {
     } else if (last_year) {
         whereClause.createdAt = { [Op.gte]: new Date(new Date().setFullYear(new Date().getFullYear() - 1)) };  // Last year
     }
+
 
 
     // Step 5: Fetch paginated data from the tables
@@ -1810,7 +1810,7 @@ const AddLikesHighlight = asyncHandler(async (req, res) => {
             status: '1' ,
             is_publish: '1'
         },
-        attributes: ['id', 'project_name', 'project', 'developer', 'community', 'city', 'link'], // Removed empty string
+        attributes: ['id', 'title', 'project', 'developer', 'community', 'city', 'link'], // Removed empty string
         include: [{
             model: Assect_Highlight,
             attributes: ['id', 'title', 'path', 'filename'],
@@ -1841,7 +1841,7 @@ const Publish_Feeds = asyncHandler(async (req, res) => {
         }]
     });
 
-    return res.json(new ApiResponse(200, feeds, "highlight retrieved successfully."));
+    return res.json(new ApiResponse(200, feeds, "Feeds retrieved successfully."));
 });
 
 
