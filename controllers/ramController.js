@@ -1596,13 +1596,13 @@ const GetMyHighlightCount = asyncHandler(async (req, res) => {
 
 const updatedHighlight = asyncHandler(async (req, res) => {
     const { id } = req.body;
-    const { project_title, project_name, developer, community, city, link, folder_id, assets_feeds } = req.body;
+    const { project_title, project_name, developer, community, city, link, folder_id, assets_feed} = req.body;
 
-    const assets_feed=[
-        "{\"path\":\"https://res.cloudinary.com/djekf6hbq/image/upload/v1726085240/uploads/myfeeds/1726085240820-Screenshot%20%281%29.png.png\",\"filename\":\"Screenshot (1).png\",\"size\":null}",
-        "{\"path\":\"https://res.cloudinary.com/djekf6hbq/image/upload/v1726085240/uploads/myfeeds/1726085240874-Screenshot%20%282%29.png.png\",\"filename\":\"Screenshot (2).png\",\"size\":null}"
-    ]
-;
+//     const assets_feed=[
+//         "{\"path\":\"https://res.cloudinary.com/djekf6hbq/image/upload/v1726085240/uploads/myfeeds/1726085240820-Screenshot%20%281%29.png.png\",\"filename\":\"Screenshot (1).png\",\"size\":null}",
+//         "{\"path\":\"https://res.cloudinary.com/djekf6hbq/image/upload/v1726085240/uploads/myfeeds/1726085240874-Screenshot%20%282%29.png.png\",\"filename\":\"Screenshot (2).png\",\"size\":null}"
+//     ]
+// ;
       // Validate that either assets_feed or req.files is provided
     if ((!assets_feed || assets_feed.length === 0) && (!req.files || req.files.length === 0)) {
         return res.status(400).json({ message: "At least one source of files is required (mylibrary or local files)." });
