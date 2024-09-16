@@ -421,7 +421,7 @@ const updatedFeed = asyncHandler(async (req, res) => {
     if (assets_feed && assets_feed.length > 0) {
         const parsedAssets = [];
         for (const asset of normalizedAssetsFeed) {
-            console.log("kkk",asset)
+            // console.log("kkk",asset)
                 // If the asset is a string, parse it; otherwise, use it directly
                 const parsedAsset = typeof asset === 'string' ? JSON.parse(asset) : asset;
                 parsedAssets.push({
@@ -907,7 +907,7 @@ const Get_folder = asyncHandler(async (req, res) => {
     // Return the folders along with pagination details
     return res.json(new ApiResponse(200, {
         folders,
-        currentPage: parseInt(page) + 1, // To make the page 1-indexed
+        currentPage: page, // To make the page 1-indexed
         totalPages,
         totalRecords: totalFolders
     }, "All folders successfully displayed"));
