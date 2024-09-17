@@ -1381,7 +1381,7 @@ const get_highLightDetails_byid = asyncHandler(async (req, res) => {
         attributes: ['id', 'title', 'project', 'developer', 'community', 'city', 'link', 'status', 'is_publish', 'createdAt'], // Removed empty string
         include: [{
             model: Assect_Highlight,
-            attributes: ['id', 'title', 'path', 'filename'],
+            attributes: ['id', 'title', 'path', 'size', 'filename'],
             include: [{
                 model: Folder,  // Include 'Folder' properly
                 attributes: ['id', 'name']
@@ -1982,6 +1982,8 @@ const Add_ShareHighlight = asyncHandler(async (req, res) => {
             include: [{ model: Folder, attributes: ['id', 'name'] }],
         });
     }
+
+    console.log(file);
 
     // If file is still not found, return an error
     if (!file) {
