@@ -197,7 +197,7 @@ const create_myfeeds = asyncHandler(async (req, res) => {
     if (assets_feed && assets_feed.length > 0) {
         const parsedAssets = [];
         for (const asset of normalizedAssetsFeed) {
-            console.log("kkk",asset)
+           // console.log("kkk",asset)
                 // If the asset is a string, parse it; otherwise, use it directly
                 const parsedAsset = typeof asset === 'string' ? JSON.parse(asset) : asset;
                 parsedAssets.push({
@@ -220,7 +220,7 @@ const create_myfeeds = asyncHandler(async (req, res) => {
         const assetImages = req.files.map(image => ({
             title:project_title,
             path: image.path,
-            filename: image.filename.split('-').pop(), 
+            filename: image.filename.split('-').slice(1).join('-'), //image.filename.split('-').pop(), 
             size: image.size,
             folderId: folder_id,
             feedId: feed.id
@@ -262,7 +262,7 @@ const save_letter_myfeeds = asyncHandler(async (req, res) => {
     if (assets_feed && assets_feed.length > 0) {
         const parsedAssets = [];
         for (const asset of normalizedAssetsFeed) {
-            console.log("kkk",asset)
+            //console.log("kkk",asset)
                 // If the asset is a string, parse it; otherwise, use it directly
                 const parsedAsset = typeof asset === 'string' ? JSON.parse(asset) : asset;
                 parsedAssets.push({
@@ -281,7 +281,7 @@ const save_letter_myfeeds = asyncHandler(async (req, res) => {
         const assetImages = req.files.map(image => ({
             title: project_title,
             path: image.path,
-            filename: image.filename.split('-').pop(),
+            filename: image.filename.split('-').slice(1).join('-'),// image.filename.split('-').pop(),
             size: image.size,
             folderId: folder_id,
             feedId: feed.id
@@ -447,7 +447,7 @@ const updatedFeed = asyncHandler(async (req, res) => {
             const assetImages = req.files.map(image => ({
                 title: project_title,
                 path: image.path,
-                filename: image.filename.split('-').pop(),
+                filename: image.filename.split('-').slice(1).join('-'), //image.filename.split('-').pop(),
                 size: image.size,
                 folderId: folder_id,
                 feedId: feed.id
@@ -1026,7 +1026,7 @@ const file_upload_folder= asyncHandler(async(req,res)=>{
 
                 const newFile = await Assect_image.create({
                     folderId: folder.id,
-                    filename: file.filename.split('-').pop(),
+                    filename: image.filename.split('-').slice(1).join('-'), //file.filename.split('-').pop(),
                     path: file.path,
                     size: file.size
                 });
@@ -1280,10 +1280,11 @@ const CreateLikesFeed = asyncHandler(async (req, res) => {
 
      // If files are uploaded, associate them with the feed
      if (req.files && req.files.length > 0) {
+        //console.log(req.files);
         const assetImages = req.files.map(image => ({
             title:project_title,
             path: image.path,
-            filename: image.filename.split('-').pop(),
+            filename: image.filename.split('-').slice(1).join('-'), //image.filename.split('-').pop(),
             size: image.size,
             folderId: folder_id,
             highlightId: highlight.id
@@ -1324,7 +1325,7 @@ const save_letter_myhighlight = asyncHandler(async (req, res) => {
         const assetImages = req.files.map(image => ({
             title: project_title,
             path: image.path,
-            filename: image.filename.split('-').pop(), //image.filename.split('/').pop()
+            filename: image.filename.split('-').slice(1).join('-'), //image.filename.split('-').pop(), //image.filename.split('/').pop()
             size: image.size,
             folderId: folder_id,
             highlightId: highlight.id
@@ -1676,7 +1677,7 @@ const updatedHighlight = asyncHandler(async (req, res) => {
 
          const parsedAssets = [];
          for (const asset of normalizedAssetsFeed) {
-            //  console.log("kkk",asset)
+             //console.log("kkk",asset)
                  // If the asset is a string, parse it; otherwise, use it directly
                  const parsedAsset = typeof asset === 'string' ? JSON.parse(asset) : asset;
                  parsedAssets.push({
@@ -1701,7 +1702,7 @@ const updatedHighlight = asyncHandler(async (req, res) => {
             const assetImages = req.files.map(image => ({
                 title: project_title,
                 path: image.path,
-                filename: image.filename.split('-').pop(),
+                filename: image.filename.split('-').slice(1).join('-'), //image.filename.split('-').pop(),
                 size: image.size,
                 folderId: folder_id,
                 highlightId: highlight.id

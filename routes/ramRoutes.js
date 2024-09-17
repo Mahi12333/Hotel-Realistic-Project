@@ -12,6 +12,7 @@ import cloudinary from "../config/cloudinary.js";
 const storagefeedsimg = new CloudinaryStorage({
     cloudinary: cloudinary,
     params: async (req, file) => {
+        //console.log(file);
         const ext = file.mimetype.split('/')[1];
         const publicId = `${Date.now()}-${file.originalname}`;
         
