@@ -854,12 +854,13 @@ const updated_folder=asyncHandler(async(req,res)=>{
 });
 
 const Get_folder = asyncHandler(async (req, res) => {
-    const { tody_data, last_7_days, last_month, last_3_month, last_year, name, page = 1 } = req.body;
+    const { tody_data, last_7_days, last_month, last_3_month, last_year, name, page = 1, search } = req.body;
     const limit = 10;  // Set limit per page
     const offset = (parseInt(page) - 1) * limit; 
 
     // Construct filter and sort conditions
     let whereClause = {};
+
 
     // Filtering logic based on date
     if (tody_data) {
@@ -872,6 +873,14 @@ const Get_folder = asyncHandler(async (req, res) => {
         whereClause.createdAt = { [Op.gte]: new Date(new Date().setMonth(new Date().getMonth() - 3)) }; // Last 3 months
     } else if (last_year) {
         whereClause.createdAt = { [Op.gte]: new Date(new Date().setFullYear(new Date().getFullYear() - 1)) }; // Last year
+    }
+
+     // If a search query is provided, add a filter for the project_name or title
+     if (search) {
+        whereClause = {
+            ...whereClause,
+           'name': { [Op.like]: `%${search}%` } // Search for partial match in the name field
+        };
     }
 
 
@@ -933,6 +942,7 @@ const Delete_folder_byId=asyncHandler(async(req,res)=>{
     
     return res.json(new ApiResponse(201,null, " folder successfully Delete"));
 });
+
 const Preview_folder_byId=asyncHandler(async(req,res)=>{
     const {folder_id}=req.body;
     const preview_folder=await Folder.findOne({where:{id:folder_id}});
@@ -1026,10 +1036,10 @@ const file_upload_folder= asyncHandler(async(req,res)=>{
     }
 
     return res.json(new ApiResponse(201, uploadedFiles, "Files uploaded successfully to folder(s)."));
-})
+});
 
 const Get_file = asyncHandler(async (req, res) => {
-    const { folder_id, today_data, last_7_days, last_month, last_3_month, last_year, name, size, page = 1 } = req.body;
+    const { folder_id, today_data, last_7_days, last_month, last_3_month, last_year, name, size, page = 1, search } = req.body;
     const limit = 18;  // Set limit per page
     const offset = (parseInt(page) - 1) * limit;
 
@@ -1053,6 +1063,14 @@ const Get_file = asyncHandler(async (req, res) => {
         whereClause.createdAt = { [Op.gte]: new Date(new Date().setMonth(new Date().getMonth() - 3)) };  // Last 3 months
     } else if (last_year) {
         whereClause.createdAt = { [Op.gte]: new Date(new Date().setFullYear(new Date().getFullYear() - 1)) };  // Last year
+    }
+
+     // If a search query is provided, add a filter for the project_name or title
+     if (search) {
+        whereClause = {
+            ...whereClause,
+            'title': { [Op.like]: `%${search}%` } // Search for partial match in searchField
+        };
     }
 
 
