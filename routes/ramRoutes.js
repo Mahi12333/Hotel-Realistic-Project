@@ -1,6 +1,6 @@
 import express from "express"
 
-import {GetMyFeeds, GetMyFeedsDraft, getHomeBannerSlider, AddLikesFeeds, homeBannerSliders, Create_folder, file_upload_folder, Get_folder, Get_file, Delete_folder, Delete_file, create_myfeeds, save_letter_myfeeds, getFeedDetails_byid, deleteFeed, updatedFeed, Delete_folder_byId, Preview_folder_byId, updated_folder, CreateLikesFeed, create_myheighlight, save_letter_myhighlight, get_highLightDetails_byid, deleteHighlight, updatedHighlight, AddLikesHighlight, Publish_Highlight, feedsActivate, highlightActivate, Publish_Feeds, Add_ShareFeeds, Add_ShareHighlight, detailsImage, updatedimagefile, ActivefetchFeeds_highlight, InActivefetchFeeds_highlight, Draft_fetchFeeds_highlight, GetMyFeedsCount_highlight } from "../controllers/ramController.js";
+import {GetMyFeeds, GetMyFeedsDraft, getHomeBannerSlider, AddLikesFeeds, homeBannerSliders, Create_folder, file_upload_folder, Get_folder, Get_file, Delete_folder, Delete_file, create_myfeeds, save_letter_myfeeds, getFeedDetails_byid, deleteFeed, updatedFeed, Preview_folder_byId, updated_folder, CreateLikesFeed, create_myheighlight, save_letter_myhighlight, get_highLightDetails_byid, deleteHighlight, updatedHighlight, AddLikesHighlight, Publish_Highlight, feedsActivate, highlightActivate, Publish_Feeds, Add_ShareFeeds, Add_ShareHighlight, detailsImage, updatedimagefile, ActivefetchFeeds_highlight, InActivefetchFeeds_highlight, Draft_fetchFeeds_highlight, GetMyFeedsCount_highlight } from "../controllers/ramController.js";
 
 import { protect } from "../middleware/authMiddleware.js";
 import multer from "multer";
@@ -101,7 +101,7 @@ router.post('/inactive', InActivefetchFeeds_highlight);
 router.post('/draft', Draft_fetchFeeds_highlight);
 router.delete('/deletefeeds', deleteFeed);  
 router.put('/updatedfeeds',upload.array('assets_feed'), updatedFeed);
-router.post('/delete-folder-id', Delete_folder_byId);
+// router.post('/delete-folder-id', Delete_folder_byId);
 router.post('/preview-folder-id', Preview_folder_byId);
 router.put('/updatedfolder', updated_folder);
 router.post('/likes-feed', CreateLikesFeed);

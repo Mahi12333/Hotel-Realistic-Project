@@ -291,8 +291,8 @@ const save_letter_myfeeds = asyncHandler(async (req, res) => {
     }else {
         await Assect_Feed.create({
             title: project_title,
-            path: null, // Empty path since no file is provided
-            filename: null,
+            path: '', // Empty path since no file is provided
+            filename: '',
             size: 0, // 0 size indicating no file
             folderId: folder_id,
             feedId: feed.id
@@ -937,16 +937,16 @@ const Delete_folder=asyncHandler(async(req,res)=>{
             id: all_id  // Deletes all folders where the id is in the all_id array
         }
     });
-    
+
     return res.json(new ApiResponse(201,null, " folder successfully Delete"));
 });
 
-const Delete_folder_byId=asyncHandler(async(req,res)=>{
-    const {id}=req.body;
-    await Folder.destroy({where:{id:id}})
+// const Delete_folder_byId=asyncHandler(async(req,res)=>{
+//     const {id}=req.body;
+//     await Folder.destroy({where:{id:id}})
     
-    return res.json(new ApiResponse(201,null, " folder successfully Delete"));
-});
+//     return res.json(new ApiResponse(201,null, " folder successfully Delete"));
+// });
 
 const Preview_folder_byId=asyncHandler(async(req,res)=>{
     const {folder_id}=req.body;
@@ -2140,7 +2140,7 @@ export {
     // Draft_fetchFeeds,
     deleteFeed,
     updatedFeed,
-    Delete_folder_byId,
+    // Delete_folder_byId,
     Preview_folder_byId,
     updated_folder,
     CreateLikesFeed,
