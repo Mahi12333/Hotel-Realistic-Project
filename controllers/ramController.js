@@ -930,15 +930,58 @@ const Delete_folder=asyncHandler(async(req,res)=>{
     if (!all_id || !Array.isArray(all_id) || all_id.length === 0) {
         return res.json(new ApiResponse(403,null, "Folder ID(s) are required."));
     }
-    
-    // Delete multiple folders in one query
-    await Folder.destroy({
-        where: {
-            id: all_id  // Deletes all folders where the id is in the all_id array
-        }
-    });
 
-    return res.json(new ApiResponse(201,null, " folder successfully Delete"));
+    const deletedFolders = [];
+    const deletedFiles = [];
+
+    // Loop through each folder_id
+    for (let folder_id of all_id) {
+        // Delete records from Assect_image related to this folder
+        const deletedImages = await Assect_image.destroy({
+            where: { folderId: folder_id }
+        });
+
+        // Delete records from Assect_Feed related to this folder
+        const deletedFeeds = await Assect_Feed.destroy({
+            where: { folderId: folder_id }
+        });
+
+        // Delete records from Assect_Highlight related to this folder
+        const deletedHighlights = await Assect_Highlight.destroy({
+            where: { folderId: folder_id }
+        });
+
+        // Track if any files were deleted from these tables
+        if (deletedImages || deletedFeeds || deletedHighlights) {
+            deletedFiles.push({
+                folderId: folder_id,
+                imagesDeleted: deletedImages,
+                feedsDeleted: deletedFeeds,
+                highlightsDeleted: deletedHighlights
+            });
+        }
+
+        // Finally, delete the folder itself if related data has been removed
+        const deletedFolder = await Folder.destroy({
+            where: { id: folder_id }
+        });
+
+        if (deletedFolder) {
+            deletedFolders.push(folder_id); // Keep track of deleted folders
+        }
+    }
+
+    // If no folders were deleted, send a 404 response
+    if (deletedFolders.length === 0) {
+        return res.status(404).json(new ApiResponse(404, null, "No folders found to delete."));
+    }
+
+    // Return success response with details on deleted files and folders
+    return res.status(201).json(new ApiResponse(201, {
+        deletedFolders: deletedFolders,
+        deletedFiles: deletedFiles
+    }, "Folders and associated files successfully deleted."));
+    
 });
 
 // const Delete_folder_byId=asyncHandler(async(req,res)=>{
