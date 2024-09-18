@@ -927,13 +927,17 @@ const Get_folder = asyncHandler(async (req, res) => {
 
 const Delete_folder=asyncHandler(async(req,res)=>{
     const {all_id}=req.body;
-    if (!all_id || all_id.length === 0) {
-        return res.json(new ApiResponse(403, null, "File IDs are required for deletion."));
+    if (!all_id || !Array.isArray(all_id) || all_id.length === 0) {
+        return res.json(new ApiResponse(403,null, "Folder ID(s) are required."));
     }
-
-    for(let id of all_id){
-        await Folder.destroy({where:{id:id}})
-    }
+    
+    // Delete multiple folders in one query
+    await Folder.destroy({
+        where: {
+            id: all_id  // Deletes all folders where the id is in the all_id array
+        }
+    });
+    
     return res.json(new ApiResponse(201,null, " folder successfully Delete"));
 });
 
