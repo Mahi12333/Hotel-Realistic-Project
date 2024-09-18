@@ -927,9 +927,10 @@ const Get_folder = asyncHandler(async (req, res) => {
 
 const Delete_folder=asyncHandler(async(req,res)=>{
     const {all_id}=req.body;
-    if (!all_id || !Array.isArray(all_id) || all_id.length === 0) {
-        return res.json(new ApiResponse(403,null, "Folder ID(s) are required."));
+    if (!all_id || all_id.length === 0) {
+        return res.json(new ApiResponse(403, null, "File IDs are required for deletion."));
     }
+
     for(let id of all_id){
         await Folder.destroy({where:{id:id}})
     }
