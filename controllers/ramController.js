@@ -1062,7 +1062,7 @@ const file_upload_folder= asyncHandler(async(req,res)=>{
     if (!req.files || req.files.length === 0) {
         return res.json(new ApiResponse(403, null, "No files uploaded."));
     }
-    
+    return res.json(new ApiResponse(403,req.files, "Folder ID(s) are required."));
     let uploadedFiles = [];
     for (let id of All_id_perse) {
         console.log("id",id)
