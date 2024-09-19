@@ -1049,38 +1049,42 @@ const Preview_folder_byId=asyncHandler(async(req,res)=>{
 
 const file_upload_folder= asyncHandler(async(req,res)=>{
     const { all_id } = req.body;
-  //  console.log("hh");
-//    console.log(typeof(all_id));
-    // if (!all_id || !Array.isArray(all_id) || all_id.length === 0) {
-    //     return res.json(new ApiResponse(403, "Folder ID(s) are required."));
-    // }
     const All_id_perse=JSON.parse(all_id);
     if (!all_id || All_id_perse.length === 0) {
         return res.json(new ApiResponse(403, null, "Folder ID(s) are required."));
     }
-  console.log(all_id);
-    if (!req.files || req.files.length === 0) {
-        return res.json(new ApiResponse(403, null, "No files uploaded."));
-    }
-    return res.json(new ApiResponse(403,req.files, "Folder ID(s) are required."));
-    let uploadedFiles = [];
-    for (let id of All_id_perse) {
-        console.log("id",id)
-        const folder = await Folder.findOne({ where: { id: id } });
-        console.log(folder)
-        if (folder) {
-            for (let file of req.files) {
-                console.log(req.files);
 
-                const newFile = await Assect_image.create({
-                    folderId: folder.id,
-                    filename: image.filename.split('-').slice(1).join('-'), //file.filename.split('-').pop(),
-                    path: file.path,
-                    size: file.size
-                });
-                uploadedFiles.push(newFile);
-            }
+    if (!req.files || req.files.length === 0) {
+        return res.json(new ApiResponse(403, null, "File must be Required."));
+    }
+
+    let uploadedFiles = [];
+
+    // Loop through each folder ID provided in the request
+    for (let id of All_id_perse) {
+        const folder = await Folder.findOne({ where: { id: id } });
+// console.log(folder)
+        if (folder) {
+        // If files are uploaded, associate them with the folder
+        if (req.files && req.files.length > 0) {
+            const assetImages = req.files.map(image => ({
+                path: image.path,
+                filename: image.filename.split('-').slice(1).join('-'), // Handle filename
+                size: image.size,
+                folderId: folder.id,
+            }));
+
+            // Bulk create all asset images
+            const createdFiles = await Assect_image.bulkCreate(assetImages);
+
+            // Store the created files for the response
+            uploadedFiles.push(...createdFiles);
         }
+    }
+}
+
+    if (uploadedFiles.length === 0) {
+        return res.json(new ApiResponse(403, null, "No files uploaded."));
     }
 
     return res.json(new ApiResponse(201, uploadedFiles, "Files uploaded successfully to folder(s)."));
