@@ -35,7 +35,7 @@ import Assect_Feed from "./assect_feedModel.js";
 import MyHighlight from "./myheighlightModel.js";
 import Assect_Highlight from "./assect_highlight.js";
 import UserShares from "./shareModel.js";
-
+import Common_project from "./common_projectModel.js";
 
 ProjectAmenity.belongsTo(Amenity);
 Amenity.hasMany(ProjectAmenity);
@@ -141,7 +141,8 @@ export  {
     Assect_image,
     Assect_Feed,
     Assect_Highlight,
-    UserShares
+    UserShares,
+    Common_project
 }
 
 

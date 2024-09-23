@@ -2,7 +2,7 @@ import asyncHandler from 'express-async-handler'
 import generatedToken from '../utils/generatedToken.js';
 import bcrypt from "bcryptjs"
 import jwt from "jsonwebtoken"
-import { Material, Place, Amenity, Commission, HomeBannerSlider, HomeSchema, MyFeeds, Offer, Payment, ProjectDesignType, Project, User, ProjectAmenity, Watchlater } from '../models/index.js';
+import { Material, Place, Amenity, Commission, HomeBannerSlider, HomeSchema, MyFeeds, Offer, Payment, ProjectDesignType, Project, User, ProjectAmenity, Watchlater, Common_project } from '../models/index.js';
 import fs from 'fs/promises'
 import { Op, where } from 'sequelize';
 import { sequelize } from '../config/db.js';
@@ -1135,6 +1135,48 @@ const WatchLaterView = asyncHandler(async (req,res) => {
 
 
 
+const Addcommonproject=asyncHandler(async (req, res) => {
+    const { name, bio } = req.body;
+
+    if (!name || !bio) {
+        return res.status(400).json(
+            new ApiResponse(400, null, "Name and bio are required")
+        );
+    }
+    const existingCommunity = await Common_project.findOne({ where: { name } });
+    if (existingCommunity) {
+        return res.status(400).json(
+            new ApiResponse(400, null, "Project with this name already exists")
+        );
+    }
+    const addcommunity = await Common_project.create({
+        name,
+        bio,
+        images: req.file.path,
+    });
+
+    return res.json(
+        new ApiResponse(200, addcommunity, " Project added successfully")
+    );
+  });
+  
+  const get_commonproject=asyncHandler(async (req, res) => {
+        const location = await Common_project.findAll();
+        if (!location.length) {
+            return res.json(
+                new ApiResponse(404, [], " Project not found")
+            )
+        }
+        return res.json(
+            new ApiResponse(200, location, "Project fetch successfully")
+        )
+    
+    
+  });
+
+
+
+
 export {
     authUser,
     registerBroker,
@@ -1163,7 +1205,8 @@ export {
     CompareProjects,
     WatchLatersProject,
     WatchLaterView,
-  
+    Addcommonproject,
+    get_commonproject
 
 }
 
