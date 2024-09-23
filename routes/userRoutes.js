@@ -5,7 +5,7 @@ import multer from "multer";
 import { ChannelPartnerAndBrokerChecker, adminChecker } from "../middleware/adminMiddleware.js";
 import { CloudinaryStorage } from 'multer-storage-cloudinary';
 import cloudinary from "../config/cloudinary.js";
-import Common_project from "../models/common_projectModel.js";
+
 
 
 const storage = new CloudinaryStorage({
@@ -108,7 +108,6 @@ router.get('/viewallprojects', protect, adminChecker, viewAllProjects)
 router.post('/compareprojects', CompareProjects)
 router.post('/watchlatersproject', protect, ChannelPartnerAndBrokerChecker, WatchLatersProject)
 router.get('/watchlaterview', protect, ChannelPartnerAndBrokerChecker, WatchLaterView)
-router.post('/common-project', upload.single('images'), Common_project);
-router.get('/common-project', get_commonproject);
+
 
 export default router;

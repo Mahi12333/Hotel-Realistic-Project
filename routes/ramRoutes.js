@@ -7,6 +7,7 @@ import multer from "multer";
 import { adminChecker } from "../middleware/adminMiddleware.js";
 import { CloudinaryStorage } from "multer-storage-cloudinary";
 import cloudinary from "../config/cloudinary.js";
+import { Addcommonproject, get_commonproject } from "../controllers/userController.js";
 
 
 const storagefeedsimg = new CloudinaryStorage({
@@ -119,4 +120,6 @@ router.post('/share-feed', Add_ShareFeeds);
 router.post('/share-highlight', Add_ShareHighlight);
 router.post('/detailsImage', detailsImage);
 router.put('/updatedimagefile', updatedimagefile);
+router.post('/common-project', upload.single('images'), Addcommonproject);
+router.get('/common-project', get_commonproject);
 export default router;
