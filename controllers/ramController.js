@@ -1271,6 +1271,7 @@ const CreateLikesFeed = asyncHandler(async (req, res) => {
 
   const create_myheighlight = asyncHandler(async (req, res) => {
     const { project_title, project_name, developer, city, community, link, folder_id, assets_feed } = req.body;
+    
    //console.log(req.body);
 
    //console.log('Uploaded Files:', req.files);
@@ -1352,7 +1353,8 @@ const CreateLikesFeed = asyncHandler(async (req, res) => {
 const save_letter_myhighlight = asyncHandler(async (req, res) => {
     const { project_title, project_name, developer, community, city, link, folder_id, assets_feed } = req.body;
      //console.log(req.body)
-  
+     
+     const folderId = parseInt(folder_id, 10);
     // Create a single feed
     const highlight = await MyHighlight.create({
         title: project_title,
@@ -1379,7 +1381,7 @@ const save_letter_myhighlight = asyncHandler(async (req, res) => {
             path: image.path,
             filename: image.filename.split('-').slice(1).join('-'), //image.filename.split('-').pop(), //image.filename.split('/').pop()
             size: image.size,
-            folderId: folder_id,
+            folderId: folderId,
             highlightId: highlight.id
         }));
 
@@ -1400,7 +1402,7 @@ const save_letter_myhighlight = asyncHandler(async (req, res) => {
                      path: parsedAsset.path,
                      filename: parsedAsset.filename,
                      size: parsedAsset.size,
-                     folderId: folder_id,
+                     folderId: folderId,
                      highlightId: highlight.id
                  });
          }
@@ -1414,7 +1416,7 @@ const save_letter_myhighlight = asyncHandler(async (req, res) => {
             path: null,
             filename: null,
             size: null,
-            folderId: folder_id,
+            folderId: folderId,
             highlightId: highlight.id
         });
     }
