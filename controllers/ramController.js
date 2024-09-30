@@ -4,7 +4,7 @@ import Myfeeds from '../models/myfeedsModel.js';
 import { Material, Place, Amenity, Commission,ProjectAmenity, HomeBannerSlider, HomeSchema, MyFeeds, Offer, Payment, ProjectDesignType, Project, User, MyHighlight,Folder,Assect_image, Assect_Feed, Assect_Highlight, UserShares, UserLikes } from '../models/index.js';
 import { ApiError } from '../utils/ApiErrors.js';
 import { ApiResponse } from '../utils/ApiReponse.js';
-import { Op,fn,col } from 'sequelize';
+import { Op,fn,col, where } from 'sequelize';
 import { sequelize } from '../config/db.js';
 import imageSize from 'image-size';
 import axios from 'axios';
@@ -157,7 +157,12 @@ const create_myfeeds = asyncHandler(async (req, res) => {
             message: "All fields are required."
         });   
     }
-    
+    const Exist_Project = await MyFeeds({where:{
+        project: project_name
+    }});
+    if(Exist_Project){     
+        return res.status(400).json({ message: "Project Name Already Exists." });
+    }
 
     // Validate that either assets_feed or req.files is provided
     if ((!assets_feed || assets_feed.length === 0) && (!req.files || req.files.length === 0)) {
@@ -247,7 +252,14 @@ const create_myfeeds = asyncHandler(async (req, res) => {
 
 const save_letter_myfeeds = asyncHandler(async (req, res) => {
     const { project_type, project_title, project_name, developer, community, describtion, link, folder_id, city, assets_feed } = req.body;
-     
+    const Exist_Project = await MyFeeds({where:{
+        project: project_name
+    }});
+    if(Exist_Project){     
+        return res.status(400).json({ message: "Project Name Already Exists." });
+    }
+ 
+
      if (assets_feed && assets_feed.length > 0 && req.files && req.files.length > 0) {
         return res.status(400).json({
             message: "You can only upload from one source, either 'mylibrary' or local files, not both."
@@ -419,7 +431,12 @@ const updatedFeed = asyncHandler(async (req, res) => {
             message: "All fields are required."
         });   
     }
-     
+    const Exist_Project = await MyFeeds({where:{
+        project: project_name
+    }});
+    if(Exist_Project){     
+        return res.status(400).json({ message: "Project Name Already Exists." });
+    }    
        // Start transaction
        const transaction = await sequelize.transaction();
     
@@ -1315,13 +1332,18 @@ const CreateLikesFeed = asyncHandler(async (req, res) => {
   const create_myheighlight = asyncHandler(async (req, res) => {
     const { project_title, project_name, developer, city, community, link, folder_id, assets_feed } = req.body;
     
-   //console.log(req.body);
-
-   //console.log('Uploaded Files:', req.files);
+  
     // Validate the required fields
     if (!city || !project_title || !project_name || !developer || !community || !folder_id || !link) {
         return res.json(new ApiResponse(403, null, "All fields are required."));
     }
+    const Exist_Project = await MyHighlight({where:{
+        project: project_name
+    }});
+    if(Exist_Project){     
+        return res.status(400).json({ message: "Project Name Already Exists." });
+    }
+
      // Validate that either assets_feed or req.files is provided
     if ((!assets_feed || assets_feed.length === 0) && (!req.files || req.files.length === 0)) {
         return res.status(400).json({ message: "At least one source of files is required (mylibrary or local files)." });
@@ -1406,9 +1428,15 @@ const CreateLikesFeed = asyncHandler(async (req, res) => {
 
 const save_letter_myhighlight = asyncHandler(async (req, res) => {
     const { project_title, project_name, developer, community, city, link, folder_id, assets_feed } = req.body;
-     //console.log(req.body)
+ 
      
      const folderId = parseInt(folder_id, 10);
+     const Exist_Project = await MyHighlight({where:{
+        project: project_name
+    }});
+    if(Exist_Project){     
+        return res.status(400).json({ message: "Project Name Already Exists." });
+    }
     // Create a single feed
     const highlight = await MyHighlight.create({
         title: project_title,
@@ -1761,6 +1789,13 @@ const updatedHighlight = asyncHandler(async (req, res) => {
         return res.status(400).json({
             message: "All fields are required."
         });   
+    }
+
+    const Exist_Project = await MyHighlight({where:{
+        project: project_name
+    }});
+    if(Exist_Project){     
+        return res.status(400).json({ message: "Project Name Already Exists." });
     }
 
     // Start transaction
@@ -2225,20 +2260,23 @@ const updatedimagefile = asyncHandler(async (req, res) => {
     }, "Filename updated successfully."));
 });
 
-const fetchLikesHighlight = asyncHandler(async (req, res) => {
-    const { highlightId, userId, method } = req.body;
-  
-    if (!userId) {
-      return res.json(new ApiResponse(403, null, "User ID Mandatory."));
+const web_total_feedsLike = asyncHandler(async (req, res) => {
+    const { feedId, type } = req.body;
+    
+    if (!type) {
+      return res.json(new ApiResponse(403, null, "Project Type Mandatory."));
     }
-    if (!highlightId) {
+    if (!feedId) {
       return res.json(new ApiResponse(403, null, "Project ID Mandatory."));
+    }
+    if(type == 'feeds'){
+
     }
     const [existingLike, likeCount] = await Promise.all([
       UserLikes.findOne({
-        where: { user_id: userId, pid: highlightId, type: "highlights" },
+        where: { user_id: userId, pid: feedId, type: "highlights" },
       }),
-      UserLikes.count({ where: { pid: highlightId, type: "highlights" } }),
+      UserLikes.count({ where: { pid: feedId, type: "highlights" } }),
     ]);
   
     if (method === "fetch") {
@@ -2258,7 +2296,8 @@ const fetchLikesHighlight = asyncHandler(async (req, res) => {
         return res.json(new ApiResponse(200, newLikeCount, "true"));
       }
     }
-  });
+});
+
 
 
 
@@ -2293,12 +2332,8 @@ export {
     create_myfeeds,
     save_letter_myfeeds,
     getFeedDetails_byid,
-    // ActivefetchFeeds,
-    // InActivefetchFeeds,
-    // Draft_fetchFeeds,
     deleteFeed,
     updatedFeed,
-    // Delete_folder_byId,
     Preview_folder_byId,
     updated_folder,
     CreateLikesFeed,
