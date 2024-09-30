@@ -161,7 +161,7 @@ const create_myfeeds = asyncHandler(async (req, res) => {
             project: project_name
         }});
         if(Exist_Project){     
-            return res.json(new ApiResponse(201,null, "Project Name Already Exists."));
+            return res.json(new ApiResponse(403,null, "Project Name Already Exists."));
         }
     }
 
@@ -259,7 +259,7 @@ const save_letter_myfeeds = asyncHandler(async (req, res) => {
             project: project_name
         }});
         if(Exist_Project){     
-            return res.json(new ApiResponse(201,null, "Project Name Already Exists."));
+            return res.json(new ApiResponse(403,null, "Project Name Already Exists."));
             
         }
     }
@@ -438,7 +438,7 @@ const updatedFeed = asyncHandler(async (req, res) => {
             project: project_name
         }});
         if(Exist_Project){     
-            return res.json(new ApiResponse(201,null, "Project Name Already Exists."));
+            return res.json(new ApiResponse(403,null, "Project Name Already Exists."));
         }
     }
        // Start transaction
@@ -1346,7 +1346,7 @@ const CreateLikesFeed = asyncHandler(async (req, res) => {
             project: project_name
         }});
         if(Exist_Project){     
-            return res.json(new ApiResponse(201,null, "Project Name Already Exists."));
+            return res.json(new ApiResponse(403,null, "Project Name Already Exists."));
         }
     }
 
@@ -1442,7 +1442,7 @@ const save_letter_myhighlight = asyncHandler(async (req, res) => {
             project: project_name
         }});
         if(Exist_Project){     
-            return res.json(new ApiResponse(201,null, "Project Name Already Exists."));
+            return res.json(new ApiResponse(403,null, "Project Name Already Exists."));
         }
     }
     // Create a single feed
@@ -1804,7 +1804,7 @@ const updatedHighlight = asyncHandler(async (req, res) => {
             project: project_name
         }});
         if(Exist_Project){     
-            return res.json(new ApiResponse(201,null, "Project Name Already Exists."));
+            return res.json(new ApiResponse(403,null, "Project Name Already Exists."));
         }
     }
 
