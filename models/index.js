@@ -36,6 +36,8 @@ import MyHighlight from "./myheighlightModel.js";
 import Assect_Highlight from "./assect_highlight.js";
 import UserShares from "./shareModel.js";
 import Common_project from "./common_projectModel.js";
+import HighlightLikes from "./assect_highlight_likeModel.js";
+import HighlightShare from "./assect_highlight_share.Model.js";
 
 ProjectAmenity.belongsTo(Amenity);
 Amenity.hasMany(ProjectAmenity);
@@ -97,11 +99,23 @@ Assect_Feed.belongsTo(MyFeeds, { foreignKey: 'feedId' });
 MyHighlight.hasMany(Assect_Highlight, { foreignKey: 'highlightId' });
 Assect_Highlight.belongsTo(MyHighlight, { foreignKey: 'highlightId' });
 
+// HighlightLikes Model
+HighlightLikes.belongsTo(Assect_Highlight, { foreignKey: 'pid' });
+Assect_Highlight.hasMany(HighlightLikes, { foreignKey: 'pid' });
+
+// HighlightShare Model
+HighlightShare.belongsTo(Assect_Highlight, { foreignKey: 'pid' });
+Assect_Highlight.hasMany(HighlightShare, { foreignKey: 'pid' });
+
+
+
 // Assect_Highlight.sync({ alter: true });
 // Assect_Feed.sync({ alter: true });
 // Assect_image.sync({ alter: true });
 // Folder.sync({ alter: true });
-
+// HighlightLikes.sync();
+// HighlightShare.sync();
+// Assect_Highlight.sync(); 
 
 
 export  {
@@ -142,7 +156,9 @@ export  {
     Assect_Feed,
     Assect_Highlight,
     UserShares,
-    Common_project
+    Common_project,
+    HighlightLikes,
+    HighlightShare
 }
 
 

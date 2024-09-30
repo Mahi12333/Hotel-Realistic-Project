@@ -1,13 +1,14 @@
 import asyncHandler from 'express-async-handler';
 
 
-import { Material, Place, Amenity, Commission,ProjectAmenity, HomeBannerSlider, HomeSchema, MyFeeds, Offer, Payment, ProjectDesignType, Project, User, MyHighlight,Folder,Assect_image, Assect_Feed, Assect_Highlight, UserShares, UserLikes } from '../models/index.js';
+import { Material, Place, Amenity, Commission,ProjectAmenity, HomeBannerSlider, HomeSchema, MyFeeds, Offer, Payment, ProjectDesignType, Project, User, MyHighlight,Folder,Assect_image, Assect_Feed, Assect_Highlight, UserShares, UserLikes, HighlightLikes, HighlightShare } from '../models/index.js';
 import { ApiError } from '../utils/ApiErrors.js';
 import { ApiResponse } from '../utils/ApiReponse.js';
-import { Op,fn,col, where } from 'sequelize';
+import { Op, fn,col, where } from 'sequelize';
 import { sequelize } from '../config/db.js';
 import imageSize from 'image-size';
 import axios from 'axios';
+
 
 
 const myfeeds = asyncHandler(async (req, res) => {
@@ -204,18 +205,18 @@ const create_myfeeds = asyncHandler(async (req, res) => {
         if (normalizedAssetsFeed.length > 0) {
             const parsedAssets = normalizedAssetsFeed.map(asset => {
                 const parsedAsset = typeof asset === 'string' ? JSON.parse(asset) : asset;
-                const fileType = parsedAsset.mimetype && parsedAsset.mimetype.startsWith('image/') ? 'image' :
-                                 parsedAsset.mimetype && parsedAsset.mimetype.startsWith('video/') ? 'video' : 
-                                 'unknown'; 
+                // const fileType = parsedAsset.mimetype && parsedAsset.mimetype.startsWith('image/') ? 'image' :
+                //                  parsedAsset.mimetype && parsedAsset.mimetype.startsWith('video/') ? 'video' : 
+                //                  'unknown'; 
 
                 return {
                     title: project_title,
                     path: parsedAsset.path,
-                    filename: parsedAsset.filename,
+                    filename: parsedAsset.filename.split('-').slice(1).join('-'),
                     size: parsedAsset.size,
                     folderId: folder_id,
                     feedId: feed.id,
-                    type: fileType // Dynamically determine if it's an image or video
+                    type: parsedAsset // Dynamically determine if it's an image or video
                 };
             });
 
@@ -1550,18 +1551,13 @@ const get_highLightDetails_byid = asyncHandler(async (req, res) => {
         return res.json(new ApiResponse(403, null, "highlight not found.."));
     }
 
-    const totalLikeCount = await UserLikes.count({
-        where: { pid: highlight_id, type: 'highlights' } // Filter by feed ID and type if necessary
+    const totalLikeCount = await HighlightLikes.count({
+        where: { highlightId: highlight_id, type: 'highlights' } // Use highlightId to filter
     });
-    const totalShareCount = await UserLikes.count({
-        where: { pid: highlight_id, type: 'highlights' } // Filter by feed ID and type if necessary
+    const totalShareCount = await HighlightShare.count({
+        where: { highlightId: highlight_id, type: 'highlights' } // Use highlightId to filter
     });
 
-    // const ddd={
-    //     highlight,
-    //     totalLikeCount,
-    //     totalShareCount
-    // }
 
 
     const response = {
@@ -1898,19 +1894,22 @@ const updatedHighlight = asyncHandler(async (req, res) => {
 });
 
 const AddLikesHighlight = asyncHandler(async (req, res) => {
-    const { highlightId, userId, method } = req.body;
+    const { asset_highlightId, userId, method, highlightId } = req.body;
   
     if (!userId) {
       return res.json(new ApiResponse(403, null, "User ID Mandatory."));
     }
     if (!highlightId) {
-      return res.json(new ApiResponse(403, null, "Project ID Mandatory."));
+        return res.json(new ApiResponse(403, null, "Project ID Mandatory."));
+      }
+    if (!asset_highlightId) {
+        return res.json(new ApiResponse(403, null, "Asset Highlight ID is mandatory."));
     }
     const [existingLike, likeCount] = await Promise.all([
-      UserLikes.findOne({
-        where: { user_id: userId, pid: highlightId, type: "highlights" },
+        HighlightLikes.findOne({
+        where: { user_id: userId, pid: asset_highlightId, highlightId: highlightId, type: "highlights" },
       }),
-      UserLikes.count({ where: { pid: highlightId, type: "highlights" } }),
+      HighlightLikes.count({ where: { pid: asset_highlightId, highlightId: highlightId, type: "highlights" } }),
     ]);
   
     if (method === "fetch") {
@@ -1920,17 +1919,18 @@ const AddLikesHighlight = asyncHandler(async (req, res) => {
     } else {
       if (existingLike) {
         await UserLikes.destroy({
-          where: { user_id: userId, pid: highlightId, type: "highlights" },
+          where: { user_id: userId, pid: asset_highlightId, highlightId: highlightId, type: "highlights" },
         });
         const newLikeCount = likeCount - 1; // Decrement like count
         return res.json(new ApiResponse(200, newLikeCount, "false"));
       } else {
-        await UserLikes.create({ user_id: userId, pid: highlightId, type: "highlights" });
+        await HighlightLikes.create({ user_id: userId, pid: asset_highlightId, highlightId: highlightId, type: "highlights" });
         const newLikeCount = likeCount + 1; // Increment like count
         return res.json(new ApiResponse(200, newLikeCount, "true"));
       }
     }
   });
+
 
   const highlightActivate = asyncHandler(async (req, res) => {
     const { id,type } = req.body;
@@ -2008,25 +2008,80 @@ const AddLikesHighlight = asyncHandler(async (req, res) => {
     
   });
 
-  const Publish_Highlight = asyncHandler(async (req, res) => {
-    const highlight = await MyHighlight.findAll({
-        where: { 
-            status: '1' ,
-            is_publish: '1'
-        },
-        attributes: ['id', 'title', 'project', 'developer', 'community', 'city', 'link'], // Removed empty string
-        include: [{
-            model: Assect_Highlight,
-            attributes: ['id', 'title', 'path', 'filename'],
-            include: [{
-                model: Folder,  // Include 'Folder' properly
-                attributes: ['id', 'name']
-            }]
-        }]
-    });
+  const Publish_Highlightss = asyncHandler(async (req, res) => {
+    const { userId } = req.body;
+    let highlight;
 
-    return res.json(new ApiResponse(200, highlight, "highlight retrieved successfully."));
+    if (userId) {
+        // User is logged in, fetch highlight data with user's like/share status and total counts
+        highlight = await MyHighlight.findAll({
+            where: { status: '1', is_publish: '1' },
+            attributes: ['id', 'title', 'project', 'developer', 'community', 'city', 'link'],
+            include: [{
+                model: Assect_Highlight,
+                attributes: ['id', 'title', 'path', 'filename', 'type'],
+                include: [{
+                    model: HighlightLikes,
+                    attributes: ['user_id'],
+                    where: { user_id: userId },
+                    required: false
+                }, {
+                    model: HighlightLikes,
+                    //attributes: [[sequelize.fn('COUNT', sequelize.col('HighlightLikes.id')), 'total_likes']],
+                    required: false,
+                    duplicating: false // This is important to avoid duplicating rows in the result
+                }, {
+                    model: HighlightShare,
+                    attributes: ['user_id'],
+                    where: { user_id: userId },
+                    required: false
+                }, {
+                    model: HighlightShare,
+                    attributes: [[sequelize.fn('COUNT', sequelize.col('HighlightShare.id')), 'total_shares']],
+                    required: false,
+                    duplicating: false // Same as above
+                }]
+            }]
+        });
+    } else {
+        // User is not logged in, fetch all highlights and mark all likes as false
+        highlight = await MyHighlight.findAll({
+            where: { status: '1', is_publish: '1' },
+            attributes: ['id', 'title', 'project', 'developer', 'community', 'city', 'link'],
+            include: [{
+                model: Assect_Highlight,
+                attributes: ['id', 'title', 'path', 'filename', 'type'],
+                include: [{
+                    model: HighlightLikes,
+                    //attributes: [[sequelize.fn('COUNT', sequelize.col('HighlightLikes.id')), 'total_likes']],
+                    required: false,
+                    duplicating: false // Avoid duplicates
+                }, {
+                    model: HighlightShare,
+                    //attributes: [[sequelize.fn('COUNT', sequelize.col('HighlightShare.id')), 'total_shares']],
+                    required: false,
+                    duplicating: false // Avoid duplicates
+                }]
+            }]
+        });
+    }
+
+    // Convert likes/shares data and add counts
+    const response = highlight.map(item => ({
+        ...item.toJSON(),
+        assets: item.Assect_Highlights.map(asset => ({
+            ...asset,
+            isLiked: userId ? !!asset.HighlightLikes.length : false,
+            isShared: userId ? !!asset.HighlightShares.length : false,
+            totalLikes: asset.total_likes || 0,
+            totalShares: asset.total_shares || 0
+        }))
+    }));
+
+    return res.json(new ApiResponse(200, response, "Highlight retrieved successfully."));
 });
+
+
 
 const Publish_Feeds = asyncHandler(async (req, res) => {
     const feeds = await MyFeeds.findAll({
@@ -2048,41 +2103,39 @@ const Publish_Feeds = asyncHandler(async (req, res) => {
     return res.json(new ApiResponse(200, feeds, "Feeds retrieved successfully."));
 });
 
-
 const Add_ShareHighlight = asyncHandler(async (req, res) => {
-    const { highlightId, userId, method } = req.body;
-  
+    const { asset_highlightId, userId, highlightId } = req.body;
+
+    // Basic validations
     if (!userId) {
-      return res.json(new ApiResponse(403, null, "User ID Mandatory."));
+        return res.json(new ApiResponse(403, null, "User ID is mandatory."));
     }
     if (!highlightId) {
-      return res.json(new ApiResponse(403, null, "Project ID Mandatory."));
+        return res.json(new ApiResponse(403, null, "Highlight ID is mandatory."));
     }
-    const [existingShare, likeShare] = await Promise.all([
-      UserShares.findOne({
-        where: { user_id: userId, pid: highlightId, type: "highlights" },
-      }),
-      UserShares.count({ where: { pid: highlightId, type: "highlights" } }),
-    ]);
-  
-    if (method === "fetch") {
-      return res.json(
-        new ApiResponse(200, likeShare, existingShare ? "true" : "false")
-      );
-    } else {
-      if (existingShare) {
-        await UserShares.destroy({
-          where: { user_id: userId, pid: highlightId, type: "highlights" },
+    if (!asset_highlightId) {
+        return res.json(new ApiResponse(403, null, "Asset Highlight ID is mandatory."));
+    }
+
+    try {
+        // Increment share count
+        await HighlightShare.create({
+            user_id: userId,
+            pid: asset_highlightId,
+            highlightId: highlightId,
+            type: "highlights"
         });
-        const newShareCount = likeShare - 1; // Decrement like count
-        return res.json(new ApiResponse(200, newShareCount, "false"));
-      } else {
-        await UserLikes.create({ user_id: userId, pid: highlightId, type: "highlights" });
-        const newShareCount = likeShare + 1; // Increment like count
-        return res.json(new ApiResponse(200, newShareCount, "true"));
-      }
+
+        // Count the total shares for this highlight
+        const shareCount = await HighlightShare.count({
+            where: { pid: asset_highlightId, highlightId: highlightId, type: "highlights" }
+        });
+
+        return res.json(new ApiResponse(200, shareCount, "Share successful"));
+    } catch (error) {
+        return res.json(new ApiResponse(500, null, "Error in sharing"));
     }
-  });
+});
 
 
   const Add_ShareFeeds = asyncHandler(async (req, res) => {
@@ -2270,10 +2323,63 @@ const updatedimagefile = asyncHandler(async (req, res) => {
     }, "Filename updated successfully."));
 });
 
+const Publish_Highlight = asyncHandler(async (req, res) => {
+    const userId = req.body.userId; // Logged-in user's ID
 
+    // Fetching published highlights with associated data
+    const highlights = await MyHighlight.findAll({
+        where: { 
+            status: '1',
+            is_publish: '1'
+        },
+        attributes: ['id', 'title', 'project', 'developer', 'community', 'city', 'link'],
+        include: [{
+            model: Assect_Highlight,
+            attributes: ['id', 'title', 'path', 'filename', 'type'],
+            include: [{
+                model: Folder,
+                attributes: ['id', 'name']
+            }]
+        }]
+    });
 
+    // Processing each highlight to manually fetch likes and shares
+    const response = await Promise.all(highlights.map(async highlight => {
+        const highlightData = highlight.toJSON();
 
-  
+        // Process each Assect_Highlight
+        const assets = await Promise.all(highlightData.Assect_Highlights.map(async asset => {
+            // Fetch likes for each asset manually from HighlightLikes table
+            const likes = await HighlightLikes.findAll({
+                where: { pid: asset.id }
+            });
+          
+            // Fetch shares for each asset manually from HighlightShare table
+            const shares = await HighlightShare.findAll({
+                where: { pid: asset.id }
+            });
+
+            // Determine like/share status for the logged-in user
+            const isLiked = likes.some(like => like.user_id === userId);
+            const isShared = shares.some(share => share.user_id === userId);
+            return {
+                ...asset,
+                isLiked, // Like status for logged-in user
+                isShared, // Share status for logged-in user
+                totalLikes: likes.length, // Count total likes
+                totalShares: shares.length // Count total shares
+            };
+        }));
+
+        return {
+            ...highlightData,
+            Assect_Highlights: assets
+        };
+    }));
+
+    return res.json(new ApiResponse(200, response, "Highlights retrieved successfully."));
+});
+
 
 
 
