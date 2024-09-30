@@ -82,11 +82,11 @@ const router = express.Router()
 
 
 router.post('/myfeeds', upload.array('assets_feed'), create_myfeeds);//!adminChecker
-router.get('/myfeeds/active', adminChecker,GetMyFeeds );
-router.get('/myfeeds/draft', adminChecker,GetMyFeedsDraft);
+// router.get('/myfeeds/active', adminChecker,GetMyFeeds );
+// router.get('/myfeeds/draft', adminChecker,GetMyFeedsDraft);
 router.post('/slider', uploadslider.array('banner', 1), homeBannerSliders);
 router.get('/slider', getHomeBannerSlider);
-router.post('/likes', AddLikesFeeds);
+// router.post('/likes', AddLikesFeeds);
 
 router.post('/create-folder', Create_folder);
 router.post('/get-folder', Get_folder);
