@@ -37,6 +37,11 @@ const Assect_Feed = sequelize.define('Assect_Feed', {
         type: DataTypes.INTEGER,
         allowNull: true,
         defaultValue: 0
+    },
+    type: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        defaultValue: null
     }
 }, {
     tableName: 'tbl_Assect_Feed',

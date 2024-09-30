@@ -4,7 +4,7 @@ import Myfeeds from '../models/myfeedsModel.js';
 import { Material, Place, Amenity, Commission,ProjectAmenity, HomeBannerSlider, HomeSchema, MyFeeds, Offer, Payment, ProjectDesignType, Project, User, MyHighlight,Folder,Assect_image, Assect_Feed, Assect_Highlight, UserShares, UserLikes } from '../models/index.js';
 import { ApiError } from '../utils/ApiErrors.js';
 import { ApiResponse } from '../utils/ApiReponse.js';
-import { Op } from 'sequelize';
+import { Op,fn,col } from 'sequelize';
 import { sequelize } from '../config/db.js';
 import imageSize from 'image-size';
 import axios from 'axios';
@@ -190,57 +190,70 @@ const create_myfeeds = asyncHandler(async (req, res) => {
     }
 
 
-    // Normalize assets_feed to be an array if it's a single object
-    const normalizedAssetsFeed = Array.isArray(assets_feed) ? assets_feed : [assets_feed];
+     // Handle assets_feed (mylibrary) if provided
+     if (assets_feed && assets_feed.length > 0) {
+        const normalizedAssetsFeed = Array.isArray(assets_feed) ? assets_feed : [assets_feed];
 
-    // Handle assets_feed (mylibrary) if provided
-    if (assets_feed && assets_feed.length > 0) {
-        const parsedAssets = [];
-        for (const asset of normalizedAssetsFeed) {
-           // console.log("kkk",asset)
-                // If the asset is a string, parse it; otherwise, use it directly
+        // Handle assets_feed (from 'mylibrary')
+        if (normalizedAssetsFeed.length > 0) {
+            const parsedAssets = normalizedAssetsFeed.map(asset => {
                 const parsedAsset = typeof asset === 'string' ? JSON.parse(asset) : asset;
-                parsedAssets.push({
+                const fileType = parsedAsset.mimetype && parsedAsset.mimetype.startsWith('image/') ? 'image' :
+                                 parsedAsset.mimetype && parsedAsset.mimetype.startsWith('video/') ? 'video' : 
+                                 'unknown'; 
+
+                return {
                     title: project_title,
                     path: parsedAsset.path,
                     filename: parsedAsset.filename,
                     size: parsedAsset.size,
                     folderId: folder_id,
-                    feedId: feed.id
-                });
-        }
-        if (parsedAssets.length > 0) {
-            await Assect_Feed.bulkCreate(parsedAssets);
-        }
-    }
+                    feedId: feed.id,
+                    type: fileType // Dynamically determine if it's an image or video
+                };
+            });
 
+            if (parsedAssets.length > 0) {
+                await Assect_Feed.bulkCreate(parsedAssets);
+            }
+        }
+ 
+     }
 
-     // If files are uploaded, associate them with the feed
-     if (req.files && req.files.length > 0) {
-        const assetImages = req.files.map(image => ({
-            title:project_title,
-            path: image.path,
-            filename: image.filename.split('-').slice(1).join('-'), //image.filename.split('-').pop(), 
-            size: image.size,
-            folderId: folder_id,
-            feedId: feed.id
-        }));
+    // If files are uploaded, associate them with the feed
+    if (req.files && req.files.length > 0) {
+        const assetImages = req.files.map(image => {
+            const fileType = image.mimetype.startsWith('image/') ? 'image' : 
+                             image.mimetype.startsWith('video/') ? 'video' : 
+                             'unknown'; // Fallback for unrecognized types
+
+            return {
+                title: project_title,
+                path: image.path,
+                filename: image.filename.split('-').slice(1).join('-'), // Correct filename parsing
+                size: image.size,
+                folderId: folder_id,
+                feedId: feed.id,
+                type: fileType 
+            };
+        });
 
         await Assect_Feed.bulkCreate(assetImages);
     }
+
 
     return res.json(new ApiResponse(201,feed, "Data Submitted successfully."));
 });
 
 const save_letter_myfeeds = asyncHandler(async (req, res) => {
     const { project_type, project_title, project_name, developer, community, describtion, link, folder_id, city, assets_feed } = req.body;
-  
+     
      if (assets_feed && assets_feed.length > 0 && req.files && req.files.length > 0) {
         return res.status(400).json({
             message: "You can only upload from one source, either 'mylibrary' or local files, not both."
         });
     }
-  
+    const folderId = parseInt(folder_id, 10);
     // Create a single feed
     const feed = await MyFeeds.create({
         source_type: project_type,
@@ -255,37 +268,49 @@ const save_letter_myfeeds = asyncHandler(async (req, res) => {
         is_publish: 0
     });
 
-    // Normalize assets_feed to be an array if it's a single object
-    const normalizedAssetsFeed = Array.isArray(assets_feed) ? assets_feed : [assets_feed];
-
     // Handle assets_feed (mylibrary) if provided
     if (assets_feed && assets_feed.length > 0) {
-        const parsedAssets = [];
-        for (const asset of normalizedAssetsFeed) {
-            //console.log("kkk",asset)
-                // If the asset is a string, parse it; otherwise, use it directly
+        const normalizedAssetsFeed = Array.isArray(assets_feed) ? assets_feed : [assets_feed];
+
+        // Handle assets_feed (from 'mylibrary')
+        if (normalizedAssetsFeed.length > 0) {
+            const parsedAssets = normalizedAssetsFeed.map(asset => {
                 const parsedAsset = typeof asset === 'string' ? JSON.parse(asset) : asset;
-                parsedAssets.push({
+                const fileType = parsedAsset.mimetype && parsedAsset.mimetype.startsWith('image/') ? 'image' :
+                                 parsedAsset.mimetype && parsedAsset.mimetype.startsWith('video/') ? 'video' : 
+                                 'unknown'; 
+
+                return {
                     title: project_title,
                     path: parsedAsset.path,
                     filename: parsedAsset.filename,
                     size: parsedAsset.size,
-                    folderId: folder_id,
-                    feedId: feed.id
-                });
-        }
-        if (parsedAssets.length > 0) {
-            await Assect_Feed.bulkCreate(parsedAssets);
+                    folderId: folderId,
+                    feedId: feed.id,
+                    type: fileType // Dynamically determine if it's an image or video
+                };
+            });
+
+            if (parsedAssets.length > 0) {
+                await Assect_Feed.bulkCreate(parsedAssets);
+            }
         }
     }else if (req.files && req.files.length > 0) {
-        const assetImages = req.files.map(image => ({
-            title: project_title,
-            path: image.path,
-            filename: image.filename.split('-').slice(1).join('-'),// image.filename.split('-').pop(),
-            size: image.size,
-            folderId: folder_id,
-            feedId: feed.id
-        }));
+        const assetImages = req.files.map(image => {
+            const fileType = image.mimetype.startsWith('image/') ? 'image' : 
+                             image.mimetype.startsWith('video/') ? 'video' : 
+                             'unknown'; // Fallback for unrecognized types
+
+            return {
+                title: project_title,
+                path: image.path,
+                filename: image.filename.split('-').slice(1).join('-'), // Correct filename parsing
+                size: image.size,
+                folderId: folderId,
+                feedId: feed.id,
+                type: fileType 
+            };
+        });
 
         await Assect_Feed.bulkCreate(assetImages);
     }else {
@@ -294,7 +319,8 @@ const save_letter_myfeeds = asyncHandler(async (req, res) => {
             path: '', // Empty path since no file is provided
             filename: '',
             size: 0, // 0 size indicating no file
-            folderId: folder_id,
+            type: '',
+            folderId: folderId,
             feedId: feed.id
         });
     }
@@ -315,7 +341,7 @@ const getFeedDetails_byid = asyncHandler(async (req, res) => {
         attributes: ['id','source_type', 'title', 'project', 'developer', 'community', 'city', 'link', 'describtion','status', 'is_publish', 'createdAt'], // Removed empty string
         include: [{
             model: Assect_Feed,
-            attributes: ['id', 'title', 'path', 'filename'],
+            attributes: ['id', 'title', 'path', 'filename', 'type'],
             include: [{
                 model: Folder,  // Include 'Folder' properly
                 attributes: ['id', 'name']
@@ -355,6 +381,7 @@ const getFeedDetails_byid = asyncHandler(async (req, res) => {
             title: asset.title,
             path: asset.path,
             filename: asset.filename,
+            type: asset.type,
             folder: asset.Folder ? {
                 id: asset.Folder.id,
                 name: asset.Folder.name
@@ -368,7 +395,7 @@ const getFeedDetails_byid = asyncHandler(async (req, res) => {
 
 const updatedFeed = asyncHandler(async (req, res) => {
     const { id } = req.body;
-    const { project_type, project_title, project_name, developer, community, describtion, link, folder_id, assets_feed } = req.body;
+    const { project_type, project_title, project_name, developer, community, describtion, link, folder_id, city, assets_feed } = req.body;
 
      // Validate that either assets_feed or req.files is provided
      if ((!assets_feed || assets_feed.length === 0) && (!req.files || req.files.length === 0)) {
@@ -387,7 +414,7 @@ const updatedFeed = asyncHandler(async (req, res) => {
         });
     }
      // Validate the required fields
-     if (!project_type || !project_title || !project_name || !developer || !describtion || !community || !folder_id || !link) {
+     if (!project_type || !project_title || !project_name || !developer || !describtion || !community || !folder_id || !link ||!city) {
         return res.status(400).json({
             message: "All fields are required."
         });   
@@ -411,32 +438,40 @@ const updatedFeed = asyncHandler(async (req, res) => {
             developer: developer,
             community: community,
             link: link,
+            city: city,
             describtion: describtion
         }, { transaction });
 
-      // Normalize assets_feed to be an array if it's a single object
-    const normalizedAssetsFeed = Array.isArray(assets_feed) ? assets_feed : [assets_feed];
 
     // Handle assets_feed (mylibrary) if provided
     if (assets_feed && assets_feed.length > 0) {
          // Delete existing associated images
          await Assect_Feed.destroy({ where: { feedId: id } }, { transaction });
-        const parsedAssets = [];
-        for (const asset of normalizedAssetsFeed) {
-            // console.log("kkk",asset)
-                // If the asset is a string, parse it; otherwise, use it directly
+        
+        const normalizedAssetsFeed = Array.isArray(assets_feed) ? assets_feed : [assets_feed];
+
+        // Handle assets_feed (from 'mylibrary')
+        if (normalizedAssetsFeed.length > 0) {
+            const parsedAssets = normalizedAssetsFeed.map(asset => {
                 const parsedAsset = typeof asset === 'string' ? JSON.parse(asset) : asset;
-                parsedAssets.push({
+                const fileType = parsedAsset.mimetype && parsedAsset.mimetype.startsWith('image/') ? 'image' :
+                                 parsedAsset.mimetype && parsedAsset.mimetype.startsWith('video/') ? 'video' : 
+                                 'unknown'; 
+
+                return {
                     title: project_title,
                     path: parsedAsset.path,
                     filename: parsedAsset.filename,
                     size: parsedAsset.size,
                     folderId: folder_id,
-                    feedId: feed.id
-                });
-        }
-        if (parsedAssets.length > 0) {
-            await Assect_Feed.bulkCreate(parsedAssets);
+                    feedId: feed.id,
+                    type: fileType // Dynamically determine if it's an image or video
+                };
+            });
+
+            if (parsedAssets.length > 0) {
+                await Assect_Feed.bulkCreate(parsedAssets);
+            }
         }
     }
 
@@ -444,15 +479,21 @@ const updatedFeed = asyncHandler(async (req, res) => {
             // Delete existing associated images
             await Assect_Feed.destroy({ where: { feedId: id } }, { transaction });
 
-            const assetImages = req.files.map(image => ({
-                title: project_title,
-                path: image.path,
-                filename: image.filename.split('-').slice(1).join('-'), //image.filename.split('-').pop(),
-                size: image.size,
-                folderId: folder_id,
-                feedId: feed.id
-            }));
-
+            const assetImages = req.files.map(image => {
+                const fileType = image.mimetype.startsWith('image/') ? 'image' : 
+                                 image.mimetype.startsWith('video/') ? 'video' : 
+                                 'unknown'; // Fallback for unrecognized types
+    
+                return {
+                    title: project_title,
+                    path: image.path,
+                    filename: image.filename.split('-').slice(1).join('-'), // Correct filename parsing
+                    size: image.size,
+                    folderId: folder_id,
+                    feedId: feed.id,
+                    type: fileType 
+                };
+            });  
             await Assect_Feed.bulkCreate(assetImages, { transaction });
         }
 
@@ -484,13 +525,13 @@ const updatedFeed = asyncHandler(async (req, res) => {
             is_publish: '1'
         };
 
-        // If a search query is provided, add a filter for the project_name or title
-        if (search) {
-            whereClause = {
-                ...whereClause,
-                [searchField]: { [Op.like]: `%${search}%` } // Search for partial match in searchField
+        // If a search query is provided, add a filter for the search field
+        if (search && typeof search === 'string') {
+            whereClause[searchField] = {  // Use the dynamic search field
+                [Op.iLike]: `%${search.toLowerCase().trim()}%`  // Use ILIKE for case-insensitive search
             };
         }
+
 
         // Fetch total count for pagination
         const totalCount = await model.count({ where: whereClause });
@@ -585,13 +626,13 @@ const InActivefetchFeeds_highlight = asyncHandler(async (req, res) => {
             is_publish: '0'
         };
 
-        // If a search query is provided, add a filter for the project_name or title
-        if (search) {
-            whereClause = {
-                ...whereClause,
-                [searchField]: { [Op.like]: `%${search}%` } // Search for partial match in searchField
-            };
-        }
+       // If a search query is provided, add a filter for the search field
+       if (search && typeof search === 'string') {
+        whereClause[searchField] = {  // Use the dynamic search field
+            [Op.iLike]: `%${search.toLowerCase().trim()}%`  // Use ILIKE for case-insensitive search
+        };
+    }
+
 
         // Fetch total count for pagination
         const totalCount = await model.count({ where: whereClause });
@@ -664,13 +705,14 @@ const Draft_fetchFeeds_highlight = asyncHandler(async (req, res) => {
             is_publish: '0'
         };
 
-        // If a search query is provided, add a filter for the project_name or title
-        if (search) {
-            whereClause = {
-                ...whereClause,
-                [searchField]: { [Op.like]: `%${search}%` } // Search for partial match in searchField
+
+        // If a search query is provided, add a filter for the search field
+        if (search && typeof search === 'string') {
+            whereClause[searchField] = {  // Use the dynamic search field
+                [Op.iLike]: `%${search.toLowerCase().trim()}%`  // Use ILIKE for case-insensitive search
             };
         }
+
 
         // Fetch total count for pagination
         const totalCount = await model.count({ where: whereClause });
@@ -875,11 +917,10 @@ const Get_folder = asyncHandler(async (req, res) => {
         whereClause.createdAt = { [Op.gte]: new Date(new Date().setFullYear(new Date().getFullYear() - 1)) }; // Last year
     }
 
-     // If a search query is provided, add a filter for the project_name or title
-     if (search) {
-        whereClause = {
-            ...whereClause,
-           'name': { [Op.like]: `%${search}%` } // Search for partial match in the name field
+     // If a search query is provided, add a filter for the name field
+    if (search && typeof search === 'string') {
+        whereClause.name = {
+            [Op.iLike]: `%${search.toLowerCase().trim()}%`  // Use ILIKE for case-insensitive search
         };
     }
 
@@ -903,7 +944,7 @@ const Get_folder = asyncHandler(async (req, res) => {
             const nameA = a.name.toLowerCase();
             const nameB = b.name.toLowerCase();
             
-            if (name === 'asc') {
+            if (name === 'desc') {
                 return nameA.localeCompare(nameB);  // Ascending order
             } else {
                 return nameB.localeCompare(nameA);  // Descending order
@@ -984,12 +1025,7 @@ const Delete_folder=asyncHandler(async(req,res)=>{
     
 });
 
-// const Delete_folder_byId=asyncHandler(async(req,res)=>{
-//     const {id}=req.body;
-//     await Folder.destroy({where:{id:id}})
-    
-//     return res.json(new ApiResponse(201,null, " folder successfully Delete"));
-// });
+
 
 const Preview_folder_byId=asyncHandler(async(req,res)=>{
     const {folder_id}=req.body;
@@ -1067,15 +1103,22 @@ const file_upload_folder= asyncHandler(async(req,res)=>{
         if (folder) {
         // If files are uploaded, associate them with the folder
         if (req.files && req.files.length > 0) {
-            const assetImages = req.files.map(image => ({
-                path: image.path,
-                filename: image.filename.split('-').slice(1).join('-'), // Handle filename
-                size: image.size,
-                folderId: folder.id,
-            }));
-
-            // Bulk create all asset images
-            const createdFiles = await Assect_image.bulkCreate(assetImages);
+            
+            const assetImages = req.files.map(image => {
+                const fileType = image.mimetype.startsWith('image/') ? 'image' : 
+                                 image.mimetype.startsWith('video/') ? 'video' : 
+                                 'unknown'; // Fallback for unrecognized types
+    
+                return {
+                    path: image.path,
+                    filename: image.filename.split('-').slice(1).join('-'), // Correct filename parsing
+                    size: image.size,
+                    folderId: folder.id,
+                    type: fileType 
+                };
+            });
+    
+           const createdFiles = await Assect_image.bulkCreate(assetImages);
 
             // Store the created files for the response
             uploadedFiles.push(...createdFiles);
@@ -1130,19 +1173,19 @@ const Get_file = asyncHandler(async (req, res) => {
     // Step 5: Fetch paginated data from the tables
     const assetImages = await Assect_image.findAll({
         where: whereClause,
-        attributes: ['id', 'path', 'filename', 'size'],
+        attributes: ['id', 'path', 'filename', 'size', 'type'],
         include: [{ model: Folder, attributes: ['id', 'name'] }]
     });
 
     const assetFeeds = await Assect_Feed.findAll({
         where: whereClause,
-        attributes: ['id', 'path', 'filename', 'size'],
+        attributes: ['id', 'path', 'filename', 'size', 'type'],
         include: [{ model: Folder, attributes: ['id', 'name'] }]
     });
 
     const assetHighlights = await Assect_Highlight.findAll({
         where: whereClause,
-        attributes: ['id', 'path', 'filename', 'size'],
+        attributes: ['id', 'path', 'filename', 'size', 'type'],
         include: [{ model: Folder, attributes: ['id', 'name'] }]
     });
 
@@ -1304,44 +1347,55 @@ const CreateLikesFeed = asyncHandler(async (req, res) => {
         return res.json(new ApiResponse(403, null, "Data submission failed."));
     }
 
-     // Normalize assets_feed to be an array if it's a single object
-     const normalizedAssetsFeed = Array.isArray(assets_feed) ? assets_feed : [assets_feed];
-
      // Handle assets_feed (mylibrary) if provided
      if (assets_feed && assets_feed.length > 0) {
-         const parsedAssets = [];
-         for (const asset of normalizedAssetsFeed) {
-             
-                 // If the asset is a string, parse it; otherwise, use it directly
-                 const parsedAsset = typeof asset === 'string' ? JSON.parse(asset) : asset;
-                 parsedAssets.push({
-                     title: project_title,
-                     path: parsedAsset.path,
-                     filename: parsedAsset.filename,
-                     size: parsedAsset.size,
-                     folderId: folder_id,
-                     highlightId: highlight.id
-                 });
-         }
-         if (parsedAssets.length > 0) {
-             await Assect_Highlight.bulkCreate(parsedAssets);
-         }
+        const normalizedAssetsFeed = Array.isArray(assets_feed) ? assets_feed : [assets_feed];
+
+        // Handle assets_feed (from 'mylibrary')
+        if (normalizedAssetsFeed.length > 0) {
+            const parsedAssets = normalizedAssetsFeed.map(asset => {
+                const parsedAsset = typeof asset === 'string' ? JSON.parse(asset) : asset;
+                const fileType = parsedAsset.mimetype && parsedAsset.mimetype.startsWith('image/') ? 'image' :
+                                 parsedAsset.mimetype && parsedAsset.mimetype.startsWith('video/') ? 'video' : 
+                                 'unknown'; 
+
+                return {
+                    title: project_title,
+                    path: parsedAsset.path,
+                    filename: parsedAsset.filename,
+                    size: parsedAsset.size,
+                    folderId: folder_id,
+                    highlightId: highlight.id,
+                    type: fileType // Dynamically determine if it's an image or video
+                };
+            });
+
+            if (parsedAssets.length > 0) {
+                await Assect_Highlight.bulkCreate(parsedAssets);
+            }
+        }
+
+
+         
      }
-
-
-
 
      // If files are uploaded, associate them with the feed
      if (req.files && req.files.length > 0) {
-        //console.log(req.files);
-        const assetImages = req.files.map(image => ({
-            title:project_title,
-            path: image.path,
-            filename: image.filename.split('-').slice(1).join('-'), //image.filename.split('-').pop(),
-            size: image.size,
-            folderId: folder_id,
-            highlightId: highlight.id
-        }));
+        const assetImages = req.files.map(image => {
+            const fileType = image.mimetype.startsWith('image/') ? 'image' : 
+                             image.mimetype.startsWith('video/') ? 'video' : 
+                             'unknown'; // Fallback for unrecognized types
+
+            return {
+                title: project_title,
+                path: image.path,
+                filename: image.filename.split('-').slice(1).join('-'), // Correct filename parsing
+                size: image.size,
+                folderId: folder_id,
+                highlightId: highlight.id,
+                type: fileType 
+            };
+        });
 
         await Assect_Highlight.bulkCreate(assetImages);
     }
@@ -1373,54 +1427,66 @@ const save_letter_myhighlight = asyncHandler(async (req, res) => {
         });
     }
 
-     // If files are uploaded, associate them with the feed
+    // If files are uploaded, associate them with the feed
+    if (req.files && req.files.length > 0) {
+        // Create asset entries for the uploaded files
+        const assetImages = req.files.map(image => {
+            const fileType = image.mimetype.startsWith('image/') ? 'image' : 
+                             image.mimetype.startsWith('video/') ? 'video' : 
+                             'unknown'; // Fallback for unrecognized types
 
-     if (req.files && req.files.length > 0) {
-        const assetImages = req.files.map(image => ({
-            title: project_title,
-            path: image.path,
-            filename: image.filename.split('-').slice(1).join('-'), //image.filename.split('-').pop(), //image.filename.split('/').pop()
-            size: image.size,
-            folderId: folderId,
-            highlightId: highlight.id
-        }));
+            return {
+                title: project_title,
+                path: image.path,
+                filename: image.filename.split('-').slice(1).join('-'), // Correct filename parsing
+                size: image.size,
+                folderId: folderId,
+                highlightId: highlight.id,
+                type: fileType 
+            };
+        });
 
         await Assect_Highlight.bulkCreate(assetImages);
-    }else if (assets_feed && assets_feed.length > 0) {
-         // Normalize assets_feed to be an array if it's a single object
-     const normalizedAssetsFeed = Array.isArray(assets_feed) ? assets_feed : [assets_feed];
+    } else if (assets_feed && assets_feed.length > 0) {
+        // Normalize assets_feed to be an array if it's a single object
+        const normalizedAssetsFeed = Array.isArray(assets_feed) ? assets_feed : [assets_feed];
 
-     // Handle assets_feed (mylibrary) if provided
-     if (normalizedAssetsFeed.length > 0) {
-         const parsedAssets = [];
-         for (const asset of normalizedAssetsFeed) {
-             
-                 // If the asset is a string, parse it; otherwise, use it directly
-                 const parsedAsset = typeof asset === 'string' ? JSON.parse(asset) : asset;
-                 parsedAssets.push({
-                     title: project_title,
-                     path: parsedAsset.path,
-                     filename: parsedAsset.filename,
-                     size: parsedAsset.size,
-                     folderId: folderId,
-                     highlightId: highlight.id
-                 });
-         }
-         if (parsedAssets.length > 0) {
-             await Assect_Highlight.bulkCreate(parsedAssets);
-         }
-     }
-    }else{
+        // Handle assets_feed (from 'mylibrary')
+        if (normalizedAssetsFeed.length > 0) {
+            const parsedAssets = normalizedAssetsFeed.map(asset => {
+                const parsedAsset = typeof asset === 'string' ? JSON.parse(asset) : asset;
+                const fileType = parsedAsset.mimetype && parsedAsset.mimetype.startsWith('image/') ? 'image' :
+                                 parsedAsset.mimetype && parsedAsset.mimetype.startsWith('video/') ? 'video' : 
+                                 'unknown'; 
+
+                return {
+                    title: project_title,
+                    path: parsedAsset.path,
+                    filename: parsedAsset.filename,
+                    size: parsedAsset.size,
+                    folderId: folderId,
+                    highlightId: highlight.id,
+                    type: fileType // Dynamically determine if it's an image or video
+                };
+            });
+
+            if (parsedAssets.length > 0) {
+                await Assect_Highlight.bulkCreate(parsedAssets);
+            }
+        }
+    } else {
+        // Handle case where no files or assets_feed are provided
         await Assect_Highlight.create({
             title: project_title,
-            path: null,
-            filename: null,
-            size: null,
+            path: '',
+            filename: '',
+            size: '',
+            type: '',
             folderId: folderId,
             highlightId: highlight.id
         });
     }
-    
+
 
     return res.json(new ApiResponse(201,highlight, "Save  Submitted successfully."));
 });
@@ -1436,7 +1502,7 @@ const get_highLightDetails_byid = asyncHandler(async (req, res) => {
         attributes: ['id', 'title', 'project', 'developer', 'community', 'city', 'link', 'status', 'is_publish', 'createdAt'], // Removed empty string
         include: [{
             model: Assect_Highlight,
-            attributes: ['id', 'title', 'path', 'size', 'filename'],
+            attributes: ['id', 'title', 'path', 'size', 'filename', 'type'],
             include: [{
                 model: Folder,  // Include 'Folder' properly
                 attributes: ['id', 'name']
@@ -1480,6 +1546,8 @@ const get_highLightDetails_byid = asyncHandler(async (req, res) => {
             title: asset.title,
             path: asset.path,
             filename: asset.filename,
+            size: asset.size,
+            type: asset.type,
             folder: asset.Folder ? {
                 id: asset.Folder.id,
                 name: asset.Folder.name
@@ -1671,11 +1739,7 @@ const updatedHighlight = asyncHandler(async (req, res) => {
     const { id } = req.body;
     const { project_title, project_name, developer, community, city, link, folder_id, assets_feed} = req.body;
 
-//     const assets_feed=[
-//         "{\"path\":\"https://res.cloudinary.com/djekf6hbq/image/upload/v1726085240/uploads/myfeeds/1726085240820-Screenshot%20%281%29.png.png\",\"filename\":\"Screenshot (1).png\",\"size\":null}",
-//         "{\"path\":\"https://res.cloudinary.com/djekf6hbq/image/upload/v1726085240/uploads/myfeeds/1726085240874-Screenshot%20%282%29.png.png\",\"filename\":\"Screenshot (2).png\",\"size\":null}"
-//     ]
-// ;
+
       // Validate that either assets_feed or req.files is provided
     if ((!assets_feed || assets_feed.length === 0) && (!req.files || req.files.length === 0)) {
         return res.status(400).json({ message: "At least one source of files is required (mylibrary or local files)." });
@@ -1721,48 +1785,59 @@ const updatedHighlight = asyncHandler(async (req, res) => {
         }, { transaction });
 
 
-       // Normalize assets_feed to be an array if it's a single object
-     const normalizedAssetsFeed = Array.isArray(assets_feed) ? assets_feed : [assets_feed];
-
      // Handle assets_feed (mylibrary) if provided
      if (assets_feed && assets_feed.length > 0) {
          // Delete existing associated images
          await Assect_Highlight.destroy({ where: { highlightId: id } }, { transaction });
 
-         const parsedAssets = [];
-         for (const asset of normalizedAssetsFeed) {
-             //console.log("kkk",asset)
-                 // If the asset is a string, parse it; otherwise, use it directly
-                 const parsedAsset = typeof asset === 'string' ? JSON.parse(asset) : asset;
-                 parsedAssets.push({
-                     title: project_title,
-                     path: parsedAsset.path,
-                     filename: parsedAsset.filename,
-                     size: parsedAsset.size,
-                     folderId: folder_id,
-                     highlightId: highlight.id
-                 });
-         }
-         if (parsedAssets.length > 0) {
-             await Assect_Highlight.bulkCreate(parsedAssets);
-         }
+         const normalizedAssetsFeed = Array.isArray(assets_feed) ? assets_feed : [assets_feed];
+
+        // Handle assets_feed (from 'mylibrary')
+        if (normalizedAssetsFeed.length > 0) {
+            const parsedAssets = normalizedAssetsFeed.map(asset => {
+                const parsedAsset = typeof asset === 'string' ? JSON.parse(asset) : asset;
+                const fileType = parsedAsset.mimetype && parsedAsset.mimetype.startsWith('image/') ? 'image' :
+                                 parsedAsset.mimetype && parsedAsset.mimetype.startsWith('video/') ? 'video' : 
+                                 'unknown'; 
+
+                return {
+                    title: project_title,
+                    path: parsedAsset.path,
+                    filename: parsedAsset.filename,
+                    size: parsedAsset.size,
+                    folderId: folder_id,
+                    highlightId: highlight.id,
+                    type: fileType // Dynamically determine if it's an image or video
+                };
+            });
+
+            if (parsedAssets.length > 0) {
+                await Assect_Highlight.bulkCreate(parsedAssets);
+            }
+        }
      }
 
 
         if (req.files && req.files.length > 0) {
             // Delete existing associated images
             await Assect_Highlight.destroy({ where: { highlightId: id } }, { transaction });
-
-            const assetImages = req.files.map(image => ({
-                title: project_title,
-                path: image.path,
-                filename: image.filename.split('-').slice(1).join('-'), //image.filename.split('-').pop(),
-                size: image.size,
-                folderId: folder_id,
-                highlightId: highlight.id
-            }));
-
+            const assetImages = req.files.map(image => {
+                const fileType = image.mimetype.startsWith('image/') ? 'image' : 
+                                 image.mimetype.startsWith('video/') ? 'video' : 
+                                 'unknown'; // Fallback for unrecognized types
+    
+                return {
+                    title: project_title,
+                    path: image.path,
+                    filename: image.filename.split('-').slice(1).join('-'), // Correct filename parsing
+                    size: image.size,
+                    folderId: folder_id,
+                    highlightId: highlight.id,
+                    type: fileType 
+                };
+            });  
             await Assect_Highlight.bulkCreate(assetImages, { transaction });
+
         }
 
         // Commit transaction
@@ -2016,7 +2091,7 @@ const Add_ShareHighlight = asyncHandler(async (req, res) => {
     // Try fetching the file from Assect_image first
     let file = await Assect_image.findOne({
         where: whereClause,
-        attributes: ['id', 'path', 'filename', 'size', 'createdAt'],
+        attributes: ['id', 'path', 'filename', 'size', 'type', 'createdAt'],
         include: [{ model: Folder, attributes: ['id', 'name'] }],
     });
 
@@ -2024,7 +2099,7 @@ const Add_ShareHighlight = asyncHandler(async (req, res) => {
     if (!file) {
         file = await Assect_Feed.findOne({
             where: whereClause,
-            attributes: ['id', 'title', 'path', 'filename', 'size', 'createdAt'],
+            attributes: ['id', 'title', 'path', 'filename', 'size', 'type', 'createdAt'],
             include: [{ model: Folder, attributes: ['id', 'name'] }],
         });
     }
@@ -2033,12 +2108,11 @@ const Add_ShareHighlight = asyncHandler(async (req, res) => {
     if (!file) {
         file = await Assect_Highlight.findOne({
             where: whereClause,
-            attributes: ['id', 'title', 'path', 'filename', 'size', 'createdAt'],
+            attributes: ['id', 'title', 'path', 'filename', 'size', 'type', 'createdAt'],
             include: [{ model: Folder, attributes: ['id', 'name'] }],
         });
     }
 
-    console.log(file);
 
     // If file is still not found, return an error
     if (!file) {
@@ -2150,6 +2224,41 @@ const updatedimagefile = asyncHandler(async (req, res) => {
         }
     }, "Filename updated successfully."));
 });
+
+const fetchLikesHighlight = asyncHandler(async (req, res) => {
+    const { highlightId, userId, method } = req.body;
+  
+    if (!userId) {
+      return res.json(new ApiResponse(403, null, "User ID Mandatory."));
+    }
+    if (!highlightId) {
+      return res.json(new ApiResponse(403, null, "Project ID Mandatory."));
+    }
+    const [existingLike, likeCount] = await Promise.all([
+      UserLikes.findOne({
+        where: { user_id: userId, pid: highlightId, type: "highlights" },
+      }),
+      UserLikes.count({ where: { pid: highlightId, type: "highlights" } }),
+    ]);
+  
+    if (method === "fetch") {
+      return res.json(
+        new ApiResponse(200, likeCount, existingLike ? "true" : "false")
+      );
+    } else {
+      if (existingLike) {
+        await UserLikes.destroy({
+          where: { user_id: userId, pid: highlightId, type: "highlights" },
+        });
+        const newLikeCount = likeCount - 1; // Decrement like count
+        return res.json(new ApiResponse(200, newLikeCount, "false"));
+      } else {
+        await UserLikes.create({ user_id: userId, pid: highlightId, type: "highlights" });
+        const newLikeCount = likeCount + 1; // Increment like count
+        return res.json(new ApiResponse(200, newLikeCount, "true"));
+      }
+    }
+  });
 
 
 

@@ -23,6 +23,11 @@ const Assect_image = sequelize.define('Assect_image', {
     folderId: {
         type: DataTypes.INTEGER,
         allowNull: false
+    },
+    type: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        defaultValue: null
     }
 }, {
     tableName: 'tbl_assets',
