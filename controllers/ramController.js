@@ -216,7 +216,7 @@ const create_myfeeds = asyncHandler(async (req, res) => {
                     size: parsedAsset.size,
                     folderId: folder_id,
                     feedId: feed.id,
-                    type: parsedAsset // Dynamically determine if it's an image or video
+                    type: parsedAsset.type // Dynamically determine if it's an image or video
                 };
             });
 
@@ -293,9 +293,9 @@ const save_letter_myfeeds = asyncHandler(async (req, res) => {
         if (normalizedAssetsFeed.length > 0) {
             const parsedAssets = normalizedAssetsFeed.map(asset => {
                 const parsedAsset = typeof asset === 'string' ? JSON.parse(asset) : asset;
-                const fileType = parsedAsset.mimetype && parsedAsset.mimetype.startsWith('image/') ? 'image' :
-                                 parsedAsset.mimetype && parsedAsset.mimetype.startsWith('video/') ? 'video' : 
-                                 'unknown'; 
+                // const fileType = parsedAsset.mimetype && parsedAsset.mimetype.startsWith('image/') ? 'image' :
+                //                  parsedAsset.mimetype && parsedAsset.mimetype.startsWith('video/') ? 'video' : 
+                //                  'unknown'; 
 
                 return {
                     title: project_title,
@@ -304,7 +304,7 @@ const save_letter_myfeeds = asyncHandler(async (req, res) => {
                     size: parsedAsset.size,
                     folderId: folderId,
                     feedId: feed.id,
-                    type: fileType // Dynamically determine if it's an image or video
+                    type: parsedAsset.type // Dynamically determine if it's an image or video
                 };
             });
 
@@ -476,9 +476,9 @@ const updatedFeed = asyncHandler(async (req, res) => {
         if (normalizedAssetsFeed.length > 0) {
             const parsedAssets = normalizedAssetsFeed.map(asset => {
                 const parsedAsset = typeof asset === 'string' ? JSON.parse(asset) : asset;
-                const fileType = parsedAsset.mimetype && parsedAsset.mimetype.startsWith('image/') ? 'image' :
-                                 parsedAsset.mimetype && parsedAsset.mimetype.startsWith('video/') ? 'video' : 
-                                 'unknown'; 
+                // const fileType = parsedAsset.mimetype && parsedAsset.mimetype.startsWith('image/') ? 'image' :
+                //                  parsedAsset.mimetype && parsedAsset.mimetype.startsWith('video/') ? 'video' : 
+                //                  'unknown'; 
 
                 return {
                     title: project_title,
@@ -487,7 +487,7 @@ const updatedFeed = asyncHandler(async (req, res) => {
                     size: parsedAsset.size,
                     folderId: folder_id,
                     feedId: feed.id,
-                    type: fileType // Dynamically determine if it's an image or video
+                    type: parsedAsset.type // Dynamically determine if it's an image or video
                 };
             });
 
@@ -1384,9 +1384,9 @@ const CreateLikesFeed = asyncHandler(async (req, res) => {
         if (normalizedAssetsFeed.length > 0) {
             const parsedAssets = normalizedAssetsFeed.map(asset => {
                 const parsedAsset = typeof asset === 'string' ? JSON.parse(asset) : asset;
-                const fileType = parsedAsset.mimetype && parsedAsset.mimetype.startsWith('image/') ? 'image' :
-                                 parsedAsset.mimetype && parsedAsset.mimetype.startsWith('video/') ? 'video' : 
-                                 'unknown'; 
+                // const fileType = parsedAsset.mimetype && parsedAsset.mimetype.startsWith('image/') ? 'image' :
+                //                  parsedAsset.mimetype && parsedAsset.mimetype.startsWith('video/') ? 'video' : 
+                //                  'unknown'; 
 
                 return {
                     title: project_title,
@@ -1395,7 +1395,7 @@ const CreateLikesFeed = asyncHandler(async (req, res) => {
                     size: parsedAsset.size,
                     folderId: folder_id,
                     highlightId: highlight.id,
-                    type: fileType // Dynamically determine if it's an image or video
+                    type: parsedAsset.type // Dynamically determine if it's an image or video
                 };
             });
 
@@ -1492,9 +1492,9 @@ const save_letter_myhighlight = asyncHandler(async (req, res) => {
         if (normalizedAssetsFeed.length > 0) {
             const parsedAssets = normalizedAssetsFeed.map(asset => {
                 const parsedAsset = typeof asset === 'string' ? JSON.parse(asset) : asset;
-                const fileType = parsedAsset.mimetype && parsedAsset.mimetype.startsWith('image/') ? 'image' :
-                                 parsedAsset.mimetype && parsedAsset.mimetype.startsWith('video/') ? 'video' : 
-                                 'unknown'; 
+                // const fileType = parsedAsset.mimetype && parsedAsset.mimetype.startsWith('image/') ? 'image' :
+                //                  parsedAsset.mimetype && parsedAsset.mimetype.startsWith('video/') ? 'video' : 
+                //                  'unknown'; 
 
                 return {
                     title: project_title,
@@ -1503,7 +1503,7 @@ const save_letter_myhighlight = asyncHandler(async (req, res) => {
                     size: parsedAsset.size,
                     folderId: folderId,
                     highlightId: highlight.id,
-                    type: fileType // Dynamically determine if it's an image or video
+                    type: parsedAsset.type // Dynamically determine if it's an image or video
                 };
             });
 
@@ -1837,9 +1837,9 @@ const updatedHighlight = asyncHandler(async (req, res) => {
         if (normalizedAssetsFeed.length > 0) {
             const parsedAssets = normalizedAssetsFeed.map(asset => {
                 const parsedAsset = typeof asset === 'string' ? JSON.parse(asset) : asset;
-                const fileType = parsedAsset.mimetype && parsedAsset.mimetype.startsWith('image/') ? 'image' :
-                                 parsedAsset.mimetype && parsedAsset.mimetype.startsWith('video/') ? 'video' : 
-                                 'unknown'; 
+                // const fileType = parsedAsset.mimetype && parsedAsset.mimetype.startsWith('image/') ? 'image' :
+                //                  parsedAsset.mimetype && parsedAsset.mimetype.startsWith('video/') ? 'video' : 
+                //                  'unknown'; 
 
                 return {
                     title: project_title,
@@ -1848,7 +1848,7 @@ const updatedHighlight = asyncHandler(async (req, res) => {
                     size: parsedAsset.size,
                     folderId: folder_id,
                     highlightId: highlight.id,
-                    type: fileType // Dynamically determine if it's an image or video
+                    type: parsedAsset.type // Dynamically determine if it's an image or video
                 };
             });
 
