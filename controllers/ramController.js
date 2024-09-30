@@ -1,6 +1,6 @@
 import asyncHandler from 'express-async-handler';
 
-import Myfeeds from '../models/myfeedsModel.js';
+
 import { Material, Place, Amenity, Commission,ProjectAmenity, HomeBannerSlider, HomeSchema, MyFeeds, Offer, Payment, ProjectDesignType, Project, User, MyHighlight,Folder,Assect_image, Assect_Feed, Assect_Highlight, UserShares, UserLikes } from '../models/index.js';
 import { ApiError } from '../utils/ApiErrors.js';
 import { ApiResponse } from '../utils/ApiReponse.js';
@@ -157,11 +157,13 @@ const create_myfeeds = asyncHandler(async (req, res) => {
             message: "All fields are required."
         });   
     }
-    const Exist_Project = await MyFeeds({where:{
-        project: project_name
-    }});
-    if(Exist_Project){     
-        return res.status(400).json({ message: "Project Name Already Exists." });
+    if(project_name){
+        const Exist_Project = await MyFeeds.findOne({where:{
+            project: project_name
+        }});
+        if(Exist_Project){     
+            return res.status(400).json({ message: "Project Name Already Exists." });
+        }
     }
 
     // Validate that either assets_feed or req.files is provided
@@ -252,14 +254,16 @@ const create_myfeeds = asyncHandler(async (req, res) => {
 
 const save_letter_myfeeds = asyncHandler(async (req, res) => {
     const { project_type, project_title, project_name, developer, community, describtion, link, folder_id, city, assets_feed } = req.body;
-    const Exist_Project = await MyFeeds({where:{
-        project: project_name
-    }});
-    if(Exist_Project){     
-        return res.status(400).json({ message: "Project Name Already Exists." });
+
+    if(project_name){
+        const Exist_Project = await MyFeeds.findOne({where:{
+            project: project_name
+        }});
+        if(Exist_Project){     
+            return res.status(400).json({ message: "Project Name Already Exists." });
+        }
     }
  
-
      if (assets_feed && assets_feed.length > 0 && req.files && req.files.length > 0) {
         return res.status(400).json({
             message: "You can only upload from one source, either 'mylibrary' or local files, not both."
@@ -431,12 +435,14 @@ const updatedFeed = asyncHandler(async (req, res) => {
             message: "All fields are required."
         });   
     }
-    const Exist_Project = await MyFeeds({where:{
-        project: project_name
-    }});
-    if(Exist_Project){     
-        return res.status(400).json({ message: "Project Name Already Exists." });
-    }    
+    if(project_name){
+        const Exist_Project = await MyFeeds.findOne({where:{
+            project: project_name
+        }});
+        if(Exist_Project){     
+            return res.status(400).json({ message: "Project Name Already Exists." });
+        }
+    }
        // Start transaction
        const transaction = await sequelize.transaction();
     
@@ -1337,11 +1343,13 @@ const CreateLikesFeed = asyncHandler(async (req, res) => {
     if (!city || !project_title || !project_name || !developer || !community || !folder_id || !link) {
         return res.json(new ApiResponse(403, null, "All fields are required."));
     }
-    const Exist_Project = await MyHighlight({where:{
-        project: project_name
-    }});
-    if(Exist_Project){     
-        return res.status(400).json({ message: "Project Name Already Exists." });
+    if(project_name){
+        const Exist_Project = await MyHighlight.findOne({where:{
+            project: project_name
+        }});
+        if(Exist_Project){     
+            return res.status(400).json({ message: "Project Name Already Exists." });
+        }
     }
 
      // Validate that either assets_feed or req.files is provided
@@ -1431,11 +1439,13 @@ const save_letter_myhighlight = asyncHandler(async (req, res) => {
  
      
      const folderId = parseInt(folder_id, 10);
-     const Exist_Project = await MyHighlight({where:{
-        project: project_name
-    }});
-    if(Exist_Project){     
-        return res.status(400).json({ message: "Project Name Already Exists." });
+     if(project_name){
+        const Exist_Project = await MyHighlight.findOne({where:{
+            project: project_name
+        }});
+        if(Exist_Project){     
+            return res.status(400).json({ message: "Project Name Already Exists." });
+        }
     }
     // Create a single feed
     const highlight = await MyHighlight.create({
@@ -1791,11 +1801,13 @@ const updatedHighlight = asyncHandler(async (req, res) => {
         });   
     }
 
-    const Exist_Project = await MyHighlight({where:{
-        project: project_name
-    }});
-    if(Exist_Project){     
-        return res.status(400).json({ message: "Project Name Already Exists." });
+    if(project_name){
+        const Exist_Project = await MyHighlight.findOne({where:{
+            project: project_name
+        }});
+        if(Exist_Project){     
+            return res.status(400).json({ message: "Project Name Already Exists." });
+        }
     }
 
     // Start transaction
@@ -2261,43 +2273,48 @@ const updatedimagefile = asyncHandler(async (req, res) => {
 });
 
 const web_total_feedsLike = asyncHandler(async (req, res) => {
-    const { feedId, type } = req.body;
+    const { feedId, type, method } = req.body;
+    const userId = req.user.id; // Assuming userId comes from authenticated request
     
+    // Check for mandatory fields
     if (!type) {
       return res.json(new ApiResponse(403, null, "Project Type Mandatory."));
     }
     if (!feedId) {
       return res.json(new ApiResponse(403, null, "Project ID Mandatory."));
     }
-    if(type == 'feeds'){
 
-    }
+    // Fetch the existing like and total like count
     const [existingLike, likeCount] = await Promise.all([
       UserLikes.findOne({
-        where: { user_id: userId, pid: feedId, type: "highlights" },
+        where: { user_id: userId, pid: feedId, type: type },
       }),
-      UserLikes.count({ where: { pid: feedId, type: "highlights" } }),
+      UserLikes.count({ where: { pid: feedId, type: type } }),
     ]);
   
+    // If the method is 'fetch', return the like status and total like count
     if (method === "fetch") {
+      const userLiked = existingLike ? true : false;
       return res.json(
-        new ApiResponse(200, likeCount, existingLike ? "true" : "false")
+        new ApiResponse(200, { totalLikes: likeCount, userLiked }, "Like status fetched successfully")
       );
     } else {
+      // If the method is 'like/dislike'
       if (existingLike) {
+        // User already liked, so remove the like (dislike)
         await UserLikes.destroy({
-          where: { user_id: userId, pid: highlightId, type: "highlights" },
+          where: { user_id: userId, pid: feedId, type: type },
         });
         const newLikeCount = likeCount - 1; // Decrement like count
-        return res.json(new ApiResponse(200, newLikeCount, "false"));
+        return res.json(new ApiResponse(200, { totalLikes: newLikeCount, userLiked: false }, "Post disliked"));
       } else {
-        await UserLikes.create({ user_id: userId, pid: highlightId, type: "highlights" });
+        // User has not liked yet, so add a like
+        await UserLikes.create({ user_id: userId, pid: feedId, type: type });
         const newLikeCount = likeCount + 1; // Increment like count
-        return res.json(new ApiResponse(200, newLikeCount, "true"));
+        return res.json(new ApiResponse(200, { totalLikes: newLikeCount, userLiked: true }, "Post liked"));
       }
     }
 });
-
 
 
 
