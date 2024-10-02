@@ -11,83 +11,7 @@ import axios from 'axios';
 
 
 
-const myfeeds = asyncHandler(async (req, res) => {
-    const { project_type,project_title,move_to,project_name,developer,community,describtion, link, id, assets_banner,status } = req.body;
 
-    let newAssetsBanner = assets_banner; // Retain existing assets_banner if no file is uploaded zaid
-    if (req.file) {
-        newAssetsBanner = req.file.path; // Update with the new file path if a file is uploaded  zaid 
-    }
-
-    if (id) {
-        // Update existing record
-        const feed = await MyFeeds.findByPk(id);
-        if (feed) {
-            await feed.update({
-                source_type:project_type,
-                title:project_title,
-                move_to:"",
-                project:project_name,
-                developer:developer,
-                community:community,
-                link,
-                assets_banner: newAssetsBanner,
-                describtion:describtion,
-                status:status
-            });
-            return res.json(new ApiResponse(201, "Data Updated successfully."));
-        } else {
-            return res.status(404).json(new ApiResponse(404, "Data not found."));
-        }
-    } else {
-        // Create new record
-        await MyFeeds.create({
-            source_type:project_type,
-                title:project_title,
-                move_to:"",
-                project:project_name,
-                developer:developer,
-                community:community,
-                link,
-                assets_banner: newAssetsBanner,
-                describtion:describtion,
-                status:status
-        });
-        return res.json(new ApiResponse(201, "Data Submitted successfully."));
-    }
-});
-
-// ! Get Active Feeds--------------
-const GetMyFeeds = asyncHandler(async (req, res)=>{
-    const MyfeedsData = await MyFeeds.findAll({ where: {'status':'1'} },{order: [['id', 'ASC']]});
-    
-    if(MyfeedsData)
-    {
-        return res.json(
-            new ApiResponse(200,MyfeedsData, "All Data List.")
-        )
-    }
-    else{
-        throw new ApiError(403, "data is not available" ) ; 
-    }
-
-});
-
-// ! Get Active Feeds--------------
-const GetMyFeedsDraft = asyncHandler(async (req, res)=>{
-    const MyfeedsData = await MyFeeds.findAll({ where: {'status':'0'} },{order: [['id', 'ASC']]});
-    //const MyfeedsData = await Myfeeds.findAll({order: [['id', 'ASC']]});
-    if(MyfeedsData)
-    {
-        return res.json(
-            new ApiResponse(200,MyfeedsData, "All Data List.")
-        )
-    }
-    else{
-        throw new ApiError(403, "data is not available" ) ;
-    }
-
-});
 
 const homeBannerSliders = asyncHandler(async (req, res) => {
     for (const file of req.files){ 
@@ -116,35 +40,6 @@ const getHomeBannerSlider=asyncHandler(async(req, res)=>{
     else{
         throw new ApiError(403, "data is not available" ) ; 
     }
-});
-const AddLikesFeeds = asyncHandler(async(req, res)=>{
-    const user_id = req.body.user_id ? req.body.user_id : '';
-    const project_id = req.body.project_id ? req.body.project_id : '';
-    if(!user_id)
-    {
-      return  res.status(403).json({ message: 'User ID Mandatory.' });
-    }
-    if(!project_id)
-    {
-      return  res.status(403).json({ message: 'Project ID Mandatory.' });
-    }
-    const checklike = await UserLikes.findOne({where: {'user_id':user_id, 'pid':project_id, 'type':'feeds'}});
-    if(checklike)
-    {
-        await UserLikes.destroy({where:{'user_id':user_id, 'pid':project_id, 'type':'feeds'}});
-       return res.status(200).json({message: 'Unlike.'});
-    }
-    else{
-        const user = await UserLikes.create({
-            user_id:user_id, 
-            pid:project_id,
-            type:'feeds'
-        });
-        return res.json(
-            new ApiResponse(200,user, "Like.")
-        )
-    }
-    
 });
 
 
@@ -371,10 +266,10 @@ const getFeedDetails_byid = asyncHandler(async (req, res) => {
     }
 
     const totalLikeCount = await UserLikes.count({
-        where: { pid: feed_id, type: 'feeds' } // Filter by feed ID and type if necessary
+        where: { feedId: feed_id, type: 'feeds' } // Filter by feed ID and type if necessary
     });
     const totalShareCount = await UserLikes.count({
-        where: { pid: feed_id, type: 'feeds' } // Filter by feed ID and type if necessary
+        where: { feedId: feed_id, type: 'feeds' } // Filter by feed ID and type if necessary
     });
 
 
@@ -434,14 +329,7 @@ const updatedFeed = asyncHandler(async (req, res) => {
      if (!project_type || !project_title || !project_name || !developer || !describtion || !community || !folder_id || !link ||!city) {
         return res.json(new ApiResponse(201,null, "All fields are required."));
     }
-    if(project_name){
-        const Exist_Project = await MyFeeds.findOne({where:{
-            project: project_name
-        }});
-        if(Exist_Project){     
-            return res.json(new ApiResponse(403,null, "Project Name Already Exists."));
-        }
-    }
+   
        // Start transaction
        const transaction = await sequelize.transaction();
     
@@ -452,8 +340,123 @@ const updatedFeed = asyncHandler(async (req, res) => {
             return res.json(new ApiResponse(403, null, "Feed not found."));
         }
 
-        // Update the feed details
-        await feed.update({
+        // Check if the project name is already taken by another feed (with a different ID)
+        if (project_name) {
+            const existProject = await MyFeeds.findOne({
+                where: {
+                    project: project_name,
+                    id: { [Op.ne]: id } // Exclude the current feed being updated
+                }
+            });
+
+            if (existProject) {
+                return res.json(new ApiResponse(403, null, "Project Name Already Exists."));
+            }
+        }
+
+        // Fetch all existing images related to the highlight
+        const existingImages = await Assect_Feed.findAll({ where: { feedId: id }, transaction });
+
+        // Declare variables for new and removed images
+        const newImages = [];
+        const removedImages = [];
+
+        // Normalize assets_feed before processing
+        const normalizedAssetsFeed = assets_feed && Array.isArray(assets_feed) ? assets_feed : (assets_feed ? [assets_feed] : []);
+
+        // Check if assets_feed is provided and map filenames for comparison
+        if (assets_feed && assets_feed.length > 0) {
+            const updatedFilenamesFromFeed = normalizedAssetsFeed.map(asset => {
+                const parsedAsset = typeof asset === 'string' ? JSON.parse(asset) : asset;
+                return parsedAsset.filename || ''; // Ensure filename is present
+            });
+
+            // Identify which existing images need to be removed based on comparison
+            for (const existingImage of existingImages) {
+                const existingFilename = existingImage.filename; 
+                if (!updatedFilenamesFromFeed.includes(existingFilename)) {
+                    removedImages.push(existingImage.id);
+                }
+            }
+        } else if (req.files && req.files.length > 0) {
+            // If local files are provided, process file uploads and map filenames
+            const updatedFilenamesFromFiles = req.files.map(file => {
+                return file.filename.split('-').slice(1).join('-'); // Ensure filename is processed correctly
+            });
+
+            // Compare existing images and track which ones to remove
+            for (const existingImage of existingImages) {
+                const existingFilename = existingImage.filename;
+                if (!updatedFilenamesFromFiles.includes(existingFilename)) {
+                    removedImages.push(existingImage.id);
+                }
+            }
+        }
+
+
+         // Process new images from assets_feed (mylibrary)
+         if (normalizedAssetsFeed.length > 0) {
+            for (const asset of normalizedAssetsFeed) {
+                const parsedAsset = typeof asset === 'string' ? JSON.parse(asset) : asset;
+                const existingImage = existingImages.find(img => img.filename === parsedAsset.filename);
+
+                // Insert new image if not already present
+                if (!existingImage && parsedAsset.filename) {
+                    newImages.push({
+                        title: project_title,
+                        path: parsedAsset.path,
+                        filename: parsedAsset.filename,
+                        size: parsedAsset.size,
+                        folderId: folder_id,
+                        feedId: feed.id,
+                        type: parsedAsset.type
+                    });
+                }
+            }
+        }
+
+        // Process new images from local file uploads
+        if (req.files && req.files.length > 0) {
+            for (const file of req.files) {
+                const parsedFilename = file.filename.split('-').slice(1).join('-');
+                const existingImage = existingImages.find(img => img.filename === parsedFilename);
+
+                // Insert new file if not already present
+                if (!existingImage && parsedFilename) {
+                    newImages.push({
+                        title: project_title,
+                        path: file.path,
+                        filename: parsedFilename,
+                        size: file.size,
+                        folderId: folder_id,
+                        feedId: feed.id,
+                        type: file.mimetype.startsWith('image/') ? 'image' : 'video'
+                    });
+                }
+            }
+        }
+
+        if (removedImages.length > 0) {
+            const integerRemovedImages = removedImages.map(id => parseInt(id, 10));
+
+            for (let eachimage of integerRemovedImages) {
+                // Delete associated likes first for highlightId = eachimage
+                // await HighlightLikes.destroy({ where: { pid: eachimage, highlightId: id }, transaction });
+                // await HighlightShare.destroy({ where: { pid: eachimage, highlightId: id }, transaction });
+
+                // Now delete the highlight record
+               await Assect_Feed.destroy({ where: { id: eachimage }, transaction });
+            }
+        }
+        
+        // Insert new images into the database
+        if (newImages.length > 0) {
+            await Assect_Feed.bulkCreate(newImages, { transaction });
+        }
+
+
+         // Update the feed details
+         await feed.update({
             source_type: project_type,
             title: project_title,
             project: project_name,
@@ -464,65 +467,10 @@ const updatedFeed = asyncHandler(async (req, res) => {
             describtion: describtion
         }, { transaction });
 
-
-    // Handle assets_feed (mylibrary) if provided
-    if (assets_feed && assets_feed.length > 0) {
-         // Delete existing associated images
-         await Assect_Feed.destroy({ where: { feedId: id } }, { transaction });
-        
-        const normalizedAssetsFeed = Array.isArray(assets_feed) ? assets_feed : [assets_feed];
-
-        // Handle assets_feed (from 'mylibrary')
-        if (normalizedAssetsFeed.length > 0) {
-            const parsedAssets = normalizedAssetsFeed.map(asset => {
-                const parsedAsset = typeof asset === 'string' ? JSON.parse(asset) : asset;
-                // const fileType = parsedAsset.mimetype && parsedAsset.mimetype.startsWith('image/') ? 'image' :
-                //                  parsedAsset.mimetype && parsedAsset.mimetype.startsWith('video/') ? 'video' : 
-                //                  'unknown'; 
-
-                return {
-                    title: project_title,
-                    path: parsedAsset.path,
-                    filename: parsedAsset.filename,
-                    size: parsedAsset.size,
-                    folderId: folder_id,
-                    feedId: feed.id,
-                    type: parsedAsset.type // Dynamically determine if it's an image or video
-                };
-            });
-
-            if (parsedAssets.length > 0) {
-                await Assect_Feed.bulkCreate(parsedAssets);
-            }
-        }
-    }
-
-        if (req.files && req.files.length > 0) {
-            // Delete existing associated images
-            await Assect_Feed.destroy({ where: { feedId: id } }, { transaction });
-
-            const assetImages = req.files.map(image => {
-                const fileType = image.mimetype.startsWith('image/') ? 'image' : 
-                                 image.mimetype.startsWith('video/') ? 'video' : 
-                                 'unknown'; // Fallback for unrecognized types
-    
-                return {
-                    title: project_title,
-                    path: image.path,
-                    filename: image.filename.split('-').slice(1).join('-'), // Correct filename parsing
-                    size: image.size,
-                    folderId: folder_id,
-                    feedId: feed.id,
-                    type: fileType 
-                };
-            });  
-            await Assect_Feed.bulkCreate(assetImages, { transaction });
-        }
-
         // Commit transaction
         await transaction.commit();
 
-        return res.json(new ApiResponse(200, feed, "Feed updated successfully."));
+        return res.json(new ApiResponse(200, null, "Feed updated successfully."));
     } catch (error) {
         // Rollback transaction if anything goes wrong
         await transaction.rollback();
@@ -855,6 +803,12 @@ const deleteFeed = asyncHandler(async (req, res) => {
 
         // If feed is found, delete associated assets and the feed
         if (feed) {
+            await UserLikes.destroy({
+                where:{ feedId: id }
+            });
+            await UserShares.destroy({
+                where:{ feedId: id }
+            });
             // Delete associated assets
             await Assect_Feed.destroy({
                 where: { feedId: id }
@@ -994,56 +948,52 @@ const Delete_folder=asyncHandler(async(req,res)=>{
         return res.json(new ApiResponse(403,null, "Folder ID(s) are required."));
     }
 
-    const deletedFolders = [];
-    const deletedFiles = [];
-
     // Loop through each folder_id
     for (let folder_id of all_id) {
         // Delete records from Assect_image related to this folder
-        const deletedImages = await Assect_image.destroy({
+            await Assect_image.destroy({
             where: { folderId: folder_id }
-        });
+          });
 
-        // Delete records from Assect_Feed related to this folder
-        const deletedFeeds = await Assect_Feed.destroy({
-            where: { folderId: folder_id }
-        });
+        // Find and delete records from Assect_Feed related to this folder
+        const feeds = await Assect_Feed.findAll({ where: { folderId: folder_id } });
+        const deletedFeedsCount = feeds.length;
 
-        // Delete records from Assect_Highlight related to this folder
-        const deletedHighlights = await Assect_Highlight.destroy({
-            where: { folderId: folder_id }
-        });
+        // If there are feeds, delete likes and shares associated with them
+        if (deletedFeedsCount > 0) {
+            const feedIds = feeds.map(feed => feed.id);
+            await UserLikes.destroy({ where: { pid: feedIds, type: 'feeds' } });
+            await UserShares.destroy({ where: { pid: feedIds, type: 'feeds' } });
+        }
+        // Delete records from Assect_Feed
+        await Assect_Feed.destroy({ where: { folderId: folder_id } });
 
-        // Track if any files were deleted from these tables
-        if (deletedImages || deletedFeeds || deletedHighlights) {
-            deletedFiles.push({
-                folderId: folder_id,
-                imagesDeleted: deletedImages,
-                feedsDeleted: deletedFeeds,
-                highlightsDeleted: deletedHighlights
-            });
+
+        // Find and delete records from Assect_Highlight related to this folder
+        const highlights = await Assect_Highlight.findAll({ where: { folderId: folder_id } });
+        const deletedHighlightsCount = highlights.length;
+
+        // If there are highlights, delete likes and shares associated with them
+        if (deletedHighlightsCount > 0) {
+            const highlightIds = highlights.map(highlight => highlight.id);
+            await HighlightLikes.destroy({ where: { pid: highlightIds, type: 'highlights' } });
+            await HighlightShare.destroy({ where: { pid: highlightIds, type: 'highlights' } });
         }
 
+        // Delete records from Assect_Highlight
+        await Assect_Highlight.destroy({ where: { folderId: folder_id } });
+
+
         // Finally, delete the folder itself if related data has been removed
-        const deletedFolder = await Folder.destroy({
+        await Folder.destroy({
             where: { id: folder_id }
         });
 
-        if (deletedFolder) {
-            deletedFolders.push(folder_id); // Keep track of deleted folders
-        }
     }
 
-    // If no folders were deleted, send a 404 response
-    if (deletedFolders.length === 0) {
-        return res.status(404).json(new ApiResponse(404, null, "No folders found to delete."));
-    }
 
     // Return success response with details on deleted files and folders
-    return res.status(201).json(new ApiResponse(201, {
-        deletedFolders: deletedFolders,
-        deletedFiles: deletedFiles
-    }, "Folders and associated files successfully deleted."));
+    return res.status(201).json(new ApiResponse(201, null, "Folders and associated files successfully deleted."));
     
 });
 
@@ -1272,10 +1222,26 @@ const Delete_file=asyncHandler(async(req,res)=>{
 
         if (!file) {
             file = await Assect_Feed.findOne({ where: { id: file_id, folderId: folder.id } });
+            // If it's an Assect_Feed, delete associated likes and shares before deleting the file
+            if (file) {
+                // Delete likes related to the feed
+                await UserLikes.destroy({ where: { pid: file_id, type: 'feeds' } });
+
+                // Delete shares related to the feed
+                await UserShares.destroy({ where: { pid: file_id, type: 'feeds' } });
+            }
         }
 
         if (!file) {
             file = await Assect_Highlight.findOne({ where: { id: file_id, folderId: folder.id } });
+            // If it's an Assect_Feed, delete associated likes and shares before deleting the file
+            if (file) {
+                // Delete likes related to the feed
+                await HighlightLikes.destroy({ where: { pid: file_id, type: 'highlights' } });
+
+                // Delete shares related to the feed
+                await HighlightShare.destroy({ where: { pid: file_id, type: 'highlights' } });
+            }
         }
 
         // If the file is found, delete it
@@ -1591,154 +1557,7 @@ const get_highLightDetails_byid = asyncHandler(async (req, res) => {
     return res.json(new ApiResponse(200, response, "highlight details retrieved successfully."));
 });
 
-const ActivefetchHighlight = asyncHandler(async (req, res) => {
-    const { search } = req.query; // Get the search query from the request
 
-    // Define the search filter for the title
-    let whereClause = {
-        status: '1',
-        is_publish: '1'
-    };
-
-    // If a search query is provided, add a filter for the title
-    if (search) {
-        whereClause = {
-            ...whereClause,
-            project_name: { [Op.like]: `%${search}%` } // Search for partial match in project_name
-        };
-    }
-
-    // Fetch the highlights with the search filter
-    const highlight = await MyHighlight.findAll({
-        where: whereClause,
-        attributes: ['id', 'project_name', 'project', 'developer', 'community', 'city', 'link'],
-        include: [{
-            model: Assect_Highlight,
-            attributes: ['id', 'title', 'path', 'filename'],
-            include: [{
-                model: Folder,
-                attributes: ['id', 'name']
-            }]
-        }]
-    });
-
-    return res.json(new ApiResponse(200, highlight, "Highlights retrieved successfully."));
-});
-
-const InActivefetchHighlight = asyncHandler(async (req, res) => {
-    const { search } = req.query; // Get the search query from the request
-
-    // Define the search filter for the title
-    let whereClause = {
-        status: '0',
-        is_publish: '0'
-    };
-    // If a search query is provided, add a filter for the title
-     // If a search query is provided, add a filter for the project_name in MyHighlight
-     if (search) {
-        whereClause = {
-            ...whereClause,
-            project_name: { [Op.like]: `%${search}%` } // Search for partial match in project_name
-        };
-    }
-
-    // Fetch the highlights with the search filter
-    const highlight = await MyHighlight.findAll({
-        where: whereClause,
-        attributes: ['id', 'project_name', 'project', 'developer', 'community', 'city', 'link'],
-        include: [{
-            model: Assect_Highlight,
-            attributes: ['id', 'title', 'path', 'filename'],
-            include: [{
-                model: Folder,
-                attributes: ['id', 'name']
-            }]
-        }]
-    });
-
-
-
-    return res.json(new ApiResponse(200, highlight, "highlight retrieved successfully."));
-});
-
-const Draft_fetchHighlight = asyncHandler(async (req, res) => {
-    const { search } = req.query; // Get the search query from the request
-
-    // Define the search filter for the title
-    let whereClause = {
-        status: '2',
-        is_publish: '0'
-    };
-
-     // If a search query is provided, add a filter for the title
-     if (search) {
-        whereClause = {
-            ...whereClause,
-            project_name: { [Op.like]: `%${search}%` } // Search for partial match in project_name
-        };
-    }
-     // Fetch the highlights with the search filter
-     const highlight = await MyHighlight.findAll({
-        where: whereClause,
-        attributes: ['id', 'project_name', 'project', 'developer', 'community', 'city', 'link'],
-        include: [{
-            model: Assect_Highlight,
-            attributes: ['id', 'title', 'path', 'filename'],
-            include: [{
-                model: Folder,
-                attributes: ['id', 'name']
-            }]
-        }]
-    });
-
-    return res.json(new ApiResponse(200, highlight, "highlight retrieved successfully."));
-});
-
-const GetMyHighlightCount = asyncHandler(async (req, res) => {
-    // Get page and size from query parameters with default values
-    const ActiveHighlight_count = await MyHighlight.findAll({
-        where:{status:'1',
-            is_publish: '1'
-        },
-        include: [{
-            model: Assect_Highlight,
-            include: [Folder]
-        }]
-    });
-    const Activehighlight_Counts = ActiveHighlight_count.length;
-    const InActiveHeighlight_count = await MyHighlight.findAll({
-        where:{status:'0',
-            is_publish: '0'
-        },
-        include: [{
-            model: Assect_Highlight,
-            include: [Folder]
-        }]
-    });
-    const InActivehighlight_counts = InActiveHeighlight_count.length;
-    const DraftHightlight_count = await MyHighlight.findAll({
-        where:{status:'2',
-            is_publish: '0'
-        },
-        include: [{
-            model: Assect_Highlight,
-            include: [Folder]
-        }]
-    });
-    const Drafthighlight_counts = DraftHightlight_count.length;
-  
-    return res.status(200).json(
-      new ApiResponse(
-        200,
-        {
-          draft: Drafthighlight_counts,
-          active: Activehighlight_Counts,
-          inactive: InActivehighlight_counts
-        },
-        "Feeds count view successful."
-      )
-    );
-});
 
   const deleteHighlight = asyncHandler(async (req, res) => {
     const { all_id } = req.body;
@@ -1754,6 +1573,12 @@ const GetMyHighlightCount = asyncHandler(async (req, res) => {
 
         // If feed is found, delete associated assets and the feed
         if (highlight) {
+            await HighlightLikes.destroy({
+                where: { highlightId: id }
+            });
+            await HighlightShare.destroy({
+                where: { highlightId: id }
+            });
             // Delete associated assets
             await Assect_Highlight.destroy({
                 where: { highlightId: id }
@@ -1769,129 +1594,176 @@ const GetMyHighlightCount = asyncHandler(async (req, res) => {
 
 const updatedHighlight = asyncHandler(async (req, res) => {
     const { id } = req.body;
-    const { project_title, project_name, developer, community, city, link, folder_id, assets_feed} = req.body;
+    const { project_title, project_name, developer, community, city, link, folder_id, assets_feed } = req.body;
 
-
-      // Validate that either assets_feed or req.files is provided
-    if ((!assets_feed || assets_feed.length === 0) && (!req.files || req.files.length === 0)) {
-        return res.status(400).json({ message: "At least one source of files is required (mylibrary or local files)." });
-    }
-
+    // Ensure only one source of files is uploaded (either assets_feed or req.files)
     if (assets_feed && assets_feed.length > 0 && req.files && req.files.length > 0) {
         return res.status(400).json({
             message: "You can only upload from one source, either 'mylibrary' or local files, not both."
         });
     }
-     
-       if (!id) {
-        return res.status(400).json({
-            message: "Highlight Id are required."
-        });
-    }
-     // Validate the required fields
-     if (!project_title || !project_name || !developer || !city || !community || !folder_id || !link) {
-        return res.status(400).json({
-            message: "All fields are required."
-        });   
+
+    // Ensure at least one source of files is provided
+    if ((!assets_feed || assets_feed.length === 0) && (!req.files || req.files.length === 0)) {
+        return res.status(400).json({ message: "At least one source of files is required (mylibrary or local files)." });
     }
 
-    if(project_name){
-        const Exist_Project = await MyHighlight.findOne({where:{
-            project: project_name
-        }});
-        if(Exist_Project){     
-            return res.json(new ApiResponse(403,null, "Project Name Already Exists."));
-        }
+    if (!id) {
+        return res.status(400).json({ message: "Highlight ID is required." });
     }
 
-    // Start transaction
-    const transaction = await sequelize.transaction();
-     
+    let transaction; // Declare transaction outside try-catch to control scope
 
     try {
-        const highlight = await MyHighlight.findOne({ where: { id: id } }, { transaction });
+        // Start the transaction
+        transaction = await sequelize.transaction();
 
+        // Find the highlight by its ID
+        const highlight = await MyHighlight.findOne({ where: { id } }, { transaction });
         if (!highlight) {
-            return res.json(new ApiResponse(403, null, "Highlight Data not Found."));
+            return res.status(404).json({ message: "Highlight not found." });
         }
 
-        // Update the feed details
+        // Check if the project name is already taken by another feed (with a different ID)
+        if (project_name) {
+            const existProject = await MyHighlight.findOne({
+                where: {
+                    project: project_name,
+                    id: { [Op.ne]: id } // Exclude the current feed being updated
+                }
+            });
+
+            if (existProject) {
+                return res.json(new ApiResponse(403, null, "Project Name Already Exists."));
+            }
+        }
+        
+        // Fetch all existing images related to the highlight
+        const existingImages = await Assect_Highlight.findAll({ where: { highlightId: id }, transaction });
+
+        // Declare variables for new and removed images
+        const newImages = [];
+        const removedImages = [];
+
+        // Normalize assets_feed before processing
+        const normalizedAssetsFeed = assets_feed && Array.isArray(assets_feed) ? assets_feed : (assets_feed ? [assets_feed] : []);
+
+        // Check if assets_feed is provided and map filenames for comparison
+        if (assets_feed && assets_feed.length > 0) {
+            const updatedFilenamesFromFeed = normalizedAssetsFeed.map(asset => {
+                const parsedAsset = typeof asset === 'string' ? JSON.parse(asset) : asset;
+                return parsedAsset.filename || ''; // Ensure filename is present
+            });
+
+            // Identify which existing images need to be removed based on comparison
+            for (const existingImage of existingImages) {
+                const existingFilename = existingImage.filename; 
+                if (!updatedFilenamesFromFeed.includes(existingFilename)) {
+                    removedImages.push(existingImage.id);
+                }
+            }
+        } else if (req.files && req.files.length > 0) {
+            // If local files are provided, process file uploads and map filenames
+            const updatedFilenamesFromFiles = req.files.map(file => {
+                return file.filename.split('-').slice(1).join('-'); // Ensure filename is processed correctly
+            });
+
+            // Compare existing images and track which ones to remove
+            for (const existingImage of existingImages) {
+                const existingFilename = existingImage.filename;
+                if (!updatedFilenamesFromFiles.includes(existingFilename)) {
+                    removedImages.push(existingImage.id);
+                }
+            }
+        }
+
+        // Process new images from assets_feed (mylibrary)
+        if (normalizedAssetsFeed.length > 0) {
+            for (const asset of normalizedAssetsFeed) {
+                const parsedAsset = typeof asset === 'string' ? JSON.parse(asset) : asset;
+                const existingImage = existingImages.find(img => img.filename === parsedAsset.filename);
+
+                // Insert new image if not already present
+                if (!existingImage && parsedAsset.filename) {
+                    newImages.push({
+                        title: project_title,
+                        path: parsedAsset.path,
+                        filename: parsedAsset.filename,
+                        size: parsedAsset.size,
+                        folderId: folder_id,
+                        highlightId: highlight.id,
+                        type: parsedAsset.type
+                    });
+                }
+            }
+        }
+
+        // Process new images from local file uploads
+        if (req.files && req.files.length > 0) {
+            for (const file of req.files) {
+                const parsedFilename = file.filename.split('-').slice(1).join('-');
+                const existingImage = existingImages.find(img => img.filename === parsedFilename);
+
+                // Insert new file if not already present
+                if (!existingImage && parsedFilename) {
+                    newImages.push({
+                        title: project_title,
+                        path: file.path,
+                        filename: parsedFilename,
+                        size: file.size,
+                        folderId: folder_id,
+                        highlightId: highlight.id,
+                        type: file.mimetype.startsWith('image/') ? 'image' : 'video'
+                    });
+                }
+            }
+        }
+
+        if (removedImages.length > 0) {
+            const integerRemovedImages = removedImages.map(id => parseInt(id, 10));
+
+            for (let eachimage of integerRemovedImages) {
+                // Delete associated likes first for highlightId = eachimage
+                await HighlightLikes.destroy({ where: { pid: eachimage, highlightId: id }, transaction });
+                await HighlightShare.destroy({ where: { pid: eachimage, highlightId: id }, transaction });
+
+                // Now delete the highlight record
+               await Assect_Highlight.destroy({ where: { id: eachimage }, transaction });
+            }
+        }
+        
+        // Insert new images into the database
+        if (newImages.length > 0) {
+            await Assect_Highlight.bulkCreate(newImages, { transaction });
+        }
+
+        
+
+
+        // Update highlight details
         await highlight.update({
             title: project_title,
             project: project_name,
             developer: developer,
             community: community,
-            link: link,
-            city: city
+            city: city,
+            link: link
         }, { transaction });
 
-
-     // Handle assets_feed (mylibrary) if provided
-     if (assets_feed && assets_feed.length > 0) {
-         // Delete existing associated images
-         await Assect_Highlight.destroy({ where: { highlightId: id } }, { transaction });
-
-         const normalizedAssetsFeed = Array.isArray(assets_feed) ? assets_feed : [assets_feed];
-
-        // Handle assets_feed (from 'mylibrary')
-        if (normalizedAssetsFeed.length > 0) {
-            const parsedAssets = normalizedAssetsFeed.map(asset => {
-                const parsedAsset = typeof asset === 'string' ? JSON.parse(asset) : asset;
-                // const fileType = parsedAsset.mimetype && parsedAsset.mimetype.startsWith('image/') ? 'image' :
-                //                  parsedAsset.mimetype && parsedAsset.mimetype.startsWith('video/') ? 'video' : 
-                //                  'unknown'; 
-
-                return {
-                    title: project_title,
-                    path: parsedAsset.path,
-                    filename: parsedAsset.filename,
-                    size: parsedAsset.size,
-                    folderId: folder_id,
-                    highlightId: highlight.id,
-                    type: parsedAsset.type // Dynamically determine if it's an image or video
-                };
-            });
-
-            if (parsedAssets.length > 0) {
-                await Assect_Highlight.bulkCreate(parsedAssets);
-            }
-        }
-     }
-
-
-        if (req.files && req.files.length > 0) {
-            // Delete existing associated images
-            await Assect_Highlight.destroy({ where: { highlightId: id } }, { transaction });
-            const assetImages = req.files.map(image => {
-                const fileType = image.mimetype.startsWith('image/') ? 'image' : 
-                                 image.mimetype.startsWith('video/') ? 'video' : 
-                                 'unknown'; // Fallback for unrecognized types
-    
-                return {
-                    title: project_title,
-                    path: image.path,
-                    filename: image.filename.split('-').slice(1).join('-'), // Correct filename parsing
-                    size: image.size,
-                    folderId: folder_id,
-                    highlightId: highlight.id,
-                    type: fileType 
-                };
-            });  
-            await Assect_Highlight.bulkCreate(assetImages, { transaction });
-
-        }
-
-        // Commit transaction
+        // Commit the transaction
         await transaction.commit();
 
-        return res.json(new ApiResponse(200, highlight, "Highlight updated successfully."));
+        // Return success response
+        return res.json(new ApiResponse(200,null, "Highlight updated successfully."));
     } catch (error) {
-        console.log(error)
-        // Rollback transaction if anything goes wrong
-        await transaction.rollback();
-        throw new ApiError(500, 'Something went wrong.');
+        // Rollback transaction if something goes wrong
+        if (transaction) await transaction.rollback();
+        console.error(error);
+        return res.status(500).json({ message: "Something went wrong." });
     }
 });
+
+
 
 const AddLikesHighlight = asyncHandler(async (req, res) => {
     const { asset_highlightId, userId, method, highlightId } = req.body;
@@ -1918,7 +1790,7 @@ const AddLikesHighlight = asyncHandler(async (req, res) => {
       );
     } else {
       if (existingLike) {
-        await UserLikes.destroy({
+        await HighlightLikes.destroy({
           where: { user_id: userId, pid: asset_highlightId, highlightId: highlightId, type: "highlights" },
         });
         const newLikeCount = likeCount - 1; // Decrement like count
@@ -2008,100 +1880,91 @@ const AddLikesHighlight = asyncHandler(async (req, res) => {
     
   });
 
-  const Publish_Highlightss = asyncHandler(async (req, res) => {
-    const { userId } = req.body;
-    let highlight;
-
-    if (userId) {
-        // User is logged in, fetch highlight data with user's like/share status and total counts
-        highlight = await MyHighlight.findAll({
-            where: { status: '1', is_publish: '1' },
-            attributes: ['id', 'title', 'project', 'developer', 'community', 'city', 'link'],
-            include: [{
-                model: Assect_Highlight,
-                attributes: ['id', 'title', 'path', 'filename', 'type'],
-                include: [{
-                    model: HighlightLikes,
-                    attributes: ['user_id'],
-                    where: { user_id: userId },
-                    required: false
-                }, {
-                    model: HighlightLikes,
-                    //attributes: [[sequelize.fn('COUNT', sequelize.col('HighlightLikes.id')), 'total_likes']],
-                    required: false,
-                    duplicating: false // This is important to avoid duplicating rows in the result
-                }, {
-                    model: HighlightShare,
-                    attributes: ['user_id'],
-                    where: { user_id: userId },
-                    required: false
-                }, {
-                    model: HighlightShare,
-                    attributes: [[sequelize.fn('COUNT', sequelize.col('HighlightShare.id')), 'total_shares']],
-                    required: false,
-                    duplicating: false // Same as above
-                }]
-            }]
-        });
-    } else {
-        // User is not logged in, fetch all highlights and mark all likes as false
-        highlight = await MyHighlight.findAll({
-            where: { status: '1', is_publish: '1' },
-            attributes: ['id', 'title', 'project', 'developer', 'community', 'city', 'link'],
-            include: [{
-                model: Assect_Highlight,
-                attributes: ['id', 'title', 'path', 'filename', 'type'],
-                include: [{
-                    model: HighlightLikes,
-                    //attributes: [[sequelize.fn('COUNT', sequelize.col('HighlightLikes.id')), 'total_likes']],
-                    required: false,
-                    duplicating: false // Avoid duplicates
-                }, {
-                    model: HighlightShare,
-                    //attributes: [[sequelize.fn('COUNT', sequelize.col('HighlightShare.id')), 'total_shares']],
-                    required: false,
-                    duplicating: false // Avoid duplicates
-                }]
-            }]
-        });
-    }
-
-    // Convert likes/shares data and add counts
-    const response = highlight.map(item => ({
-        ...item.toJSON(),
-        assets: item.Assect_Highlights.map(asset => ({
-            ...asset,
-            isLiked: userId ? !!asset.HighlightLikes.length : false,
-            isShared: userId ? !!asset.HighlightShares.length : false,
-            totalLikes: asset.total_likes || 0,
-            totalShares: asset.total_shares || 0
-        }))
-    }));
-
-    return res.json(new ApiResponse(200, response, "Highlight retrieved successfully."));
-});
-
 
 
 const Publish_Feeds = asyncHandler(async (req, res) => {
+    const { user_id } = req.body; // user_id may or may not be provided
+
+    // Fetch all feeds that are published and active
     const feeds = await MyFeeds.findAll({
         where: { 
-            status: '1',
-            is_publish: '1'
+            status: '1',         // Feed is active
+            is_publish: '1'      // Feed is published
         },
-        attributes: ['id','source_type', 'title', 'project', 'developer', 'community', 'city', 'link', 'describtion'], // Removed empty string
+        attributes: ['id', 'source_type', 'title', 'project', 'developer', 'community', 'city', 'link', 'describtion'],
         include: [{
-            model: Assect_Feed,
-            attributes: ['id', 'title', 'path', 'filename'],
+            model: Assect_Feed,  // Fetch associated assets for each feed
+            attributes: ['id', 'title', 'path', 'filename', 'type'],
             include: [{
-                model: Folder,  // Include 'Folder' properly
+                model: Folder,   // Include folder details for each asset
                 attributes: ['id', 'name']
             }]
         }]
     });
 
-    return res.json(new ApiResponse(200, feeds, "Feeds retrieved successfully."));
+    // Prepare an array to store response data with likes, shares, and statuses
+    const response = [];
+
+    // Loop through each feed to get like/share counts and statuses
+    for (const feed of feeds) {
+        const feed_id = feed.id;
+
+        // Get total like count for the feed
+        const totalLikeCount = await UserLikes.count({
+            where: { feedId: feed_id, type: 'feeds' }
+        });
+
+        // Get total share count for the feed
+        const totalShareCount = await UserShares.count({
+            where: { feedId: feed_id, type: 'feeds' }
+        });
+
+        // Initialize isLiked and isShared as false by default
+        let isLiked = false;
+        let isShared = false;
+
+        // If user_id is provided, check if the user has liked or shared the feed
+        if (user_id) {
+            const userLike = await UserLikes.findOne({
+                where: { feedId: feed_id, user_id: user_id, type: 'feeds' }
+            });
+            isLiked = !!userLike;  // true if the user has liked the feed
+
+            const userShare = await UserShares.findOne({
+                where: { pid: feedId, user_id: user_id, type: 'feeds' }
+            });
+            isShared = !!userShare;  // true if the user has shared the feed
+        }
+
+        // Construct the feed object with all required data
+        response.push({
+            id: feed.id,
+            source_type: feed.source_type,
+            title: feed.title,
+            project: feed.project,
+            developer: feed.developer,
+            community: feed.community,
+            city: feed.city,
+            link: feed.link,
+            describtion: feed.describtion,
+            assets: feed.Assect_Feeds.map(asset => ({
+                id: asset.id,
+                title: asset.title,
+                path: asset.path,
+                filename: asset.filename,
+                folder: asset.Folder ? { id: asset.Folder.id, name: asset.Folder.name } : null
+            })),
+            total_likes: totalLikeCount,
+            total_shares: totalShareCount,
+            is_liked: isLiked,
+            is_shared: isShared
+        });
+    }
+
+    // Return the response data with all feeds, like/share counts, and statuses
+    return res.json(new ApiResponse(200, response, "Feeds retrieved successfully."));
 });
+
 
 const Add_ShareHighlight = asyncHandler(async (req, res) => {
     const { asset_highlightId, userId, highlightId } = req.body;
@@ -2395,12 +2258,8 @@ const Publish_Highlight = asyncHandler(async (req, res) => {
 
 
 export {
-    myfeeds,
-    GetMyFeeds,
-    GetMyFeedsDraft,
     homeBannerSliders,
     getHomeBannerSlider,
-    AddLikesFeeds,
     Create_folder,
     Get_folder,
     file_upload_folder,
@@ -2422,22 +2281,17 @@ export {
     ActivefetchFeeds_highlight,
     InActivefetchFeeds_highlight,
     Draft_fetchFeeds_highlight,
-    // GetMyHighlightCount,
     deleteHighlight,
     updatedHighlight,
     AddLikesHighlight,
     feedsActivate,
-    // feedsDraft,
-    // feedsDeactivate,
     highlightActivate,
-    // highlightDeactivate,
-    // highlightDraft,
     Publish_Highlight,
     Publish_Feeds,
     Add_ShareFeeds,
     Add_ShareHighlight,
     detailsImage,
-    updatedimagefile
-
+    updatedimagefile,
+    
 
 }

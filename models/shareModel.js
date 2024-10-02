@@ -16,6 +16,11 @@ const UserShares = sequelize.define('UserShares', {
         type: DataTypes.INTEGER,
         allowNull: false
     },
+    feedId:{
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        defaultValue: null,
+    },
     type:{
         type: DataTypes.STRING,
         allowNull: false

@@ -10,19 +10,23 @@ const HighlightLikes = sequelize.define('HighlightLikes', {
     },
     user_id:{
         type: DataTypes.INTEGER,
-        allowNull: true
+        allowNull: true,
+        defaultValue: null,
     },
     pid:{
         type: DataTypes.INTEGER,
-        allowNull: true
+        type: DataTypes.INTEGER,
+        allowNull: true // Change this to true if null is acceptable
     },
     type:{
         type: DataTypes.STRING,
-        allowNull: true
+        allowNull: true,
+        defaultValue: null,
     },
     highlightId:{
         type: DataTypes.INTEGER,
-        allowNull: true
+        allowNull: true,
+        defaultValue: null,
     }
 },
     {

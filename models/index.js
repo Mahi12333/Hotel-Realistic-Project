@@ -58,31 +58,6 @@ Project.hasMany(Commission, { foreignKey: 'project_id' });
 
 
 
-//! Define associations between Folder and Assect_image models
-// Folder.hasMany(Assect_image, { foreignKey: 'folderId' });
-// Assect_image.belongsTo(Folder, { foreignKey: 'folderId' });
-
-// // Assect_image.sync({ alter: true });
-// // Folder.sync({ alter: true });
-
-// // Define associations
-// Folder.hasMany(Assect_Feed, { foreignKey: 'folderId' });
-// Assect_Feed.belongsTo(Folder, { foreignKey: 'folderId' });
-
-// MyFeeds.hasMany(Assect_Feed, { foreignKey: 'feedId' });
-// Assect_Feed.belongsTo(MyFeeds, { foreignKey: 'feedId' });
-
-// // Assect_Feed.sync({ alter: true });
-// // Folder.sync({ alter: true });
-
-// // Define associations
-// Folder.hasMany(Assect_Highlight, { foreignKey: 'folderId' });
-// Assect_Highlight.belongsTo(Folder, { foreignKey: 'folderId' });
-
-// MyHighlight.hasMany(Assect_Highlight, { foreignKey: 'highlightId' });
-// Assect_Highlight.belongsTo(MyHighlight, { foreignKey: 'highlightId' });
-
-
 // Associations for Folder, Assect_image, Assect_Feed, and Assect_Highlight models
 Folder.hasMany(Assect_image, { foreignKey: 'folderId'});
 Assect_image.belongsTo(Folder, { foreignKey: 'folderId'});
@@ -100,12 +75,12 @@ MyHighlight.hasMany(Assect_Highlight, { foreignKey: 'highlightId' });
 Assect_Highlight.belongsTo(MyHighlight, { foreignKey: 'highlightId' });
 
 // HighlightLikes Model
-HighlightLikes.belongsTo(Assect_Highlight, { foreignKey: 'pid' });
-Assect_Highlight.hasMany(HighlightLikes, { foreignKey: 'pid' });
+// HighlightLikes.belongsTo(Assect_Highlight, { foreignKey: 'pid' });
+// Assect_Highlight.hasMany(HighlightLikes, { foreignKey: 'pid' });
 
-// HighlightShare Model
-HighlightShare.belongsTo(Assect_Highlight, { foreignKey: 'pid' });
-Assect_Highlight.hasMany(HighlightShare, { foreignKey: 'pid' });
+// // HighlightShare Model
+// HighlightShare.belongsTo(Assect_Highlight, { foreignKey: 'pid' });
+// Assect_Highlight.hasMany(HighlightShare, { foreignKey: 'pid' });
 
 
 

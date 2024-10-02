@@ -16,6 +16,11 @@ const UserLikes = sequelize.define('UserLikes', {
         type: DataTypes.INTEGER,
         allowNull: false
     },
+    feedId:{
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        defaultValue: null,
+    },
     type:{
         type: DataTypes.STRING,
         allowNull: false
@@ -26,4 +31,8 @@ const UserLikes = sequelize.define('UserLikes', {
         timestamps: false, // Set to true if you want Sequelize to automatically manage createdAt and updatedAt columns
     }
 );
+
+// UserLikes.sync();
+// UserLikes.sync({ alter: true });
+
 export default UserLikes
