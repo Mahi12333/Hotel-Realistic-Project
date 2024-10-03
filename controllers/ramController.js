@@ -1403,7 +1403,7 @@ const save_letter_myhighlight = asyncHandler(async (req, res) => {
     const { project_title, project_name, developer, community, city, link, folder_id, assets_feed } = req.body;
  
      
-     const folderId = parseInt(folder_id, 10);
+     //const folderId = parseInt(folder_id, 10);
      if(project_name){
         const Exist_Project = await MyHighlight.findOne({where:{
             project: project_name
@@ -1443,7 +1443,7 @@ const save_letter_myhighlight = asyncHandler(async (req, res) => {
                 path: image.path,
                 filename: image.filename.split('-').slice(1).join('-'), // Correct filename parsing
                 size: image.size,
-                folderId: folderId,
+                folderId: folder_id,
                 highlightId: highlight.id,
                 type: fileType 
             };
@@ -1467,7 +1467,7 @@ const save_letter_myhighlight = asyncHandler(async (req, res) => {
                     path: parsedAsset.path,
                     filename: parsedAsset.filename,
                     size: parsedAsset.size,
-                    folderId: folderId,
+                    folderId: folder_id,
                     highlightId: highlight.id,
                     type: parsedAsset.type // Dynamically determine if it's an image or video
                 };
@@ -1485,7 +1485,7 @@ const save_letter_myhighlight = asyncHandler(async (req, res) => {
             filename: '',
             size: '',
             type: '',
-            folderId: folderId,
+            folderId: folder_id,
             highlightId: highlight.id
         });
     }
