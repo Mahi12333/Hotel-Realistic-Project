@@ -31,12 +31,12 @@ const Assect_Highlight = sequelize.define('Assect_Highlight', {
     folderId: {
         type: DataTypes.INTEGER,
         allowNull: true,
-        defaultValue: 0
+        defaultValue:0
     },
     highlightId: {
         type: DataTypes.INTEGER,
         allowNull: true,
-        defaultValue: 0
+        defaultValue:0
     },
     type: {
         type: DataTypes.STRING,

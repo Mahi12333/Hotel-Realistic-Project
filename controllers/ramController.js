@@ -46,7 +46,7 @@ const getHomeBannerSlider=asyncHandler(async(req, res)=>{
 
 const create_myfeeds = asyncHandler(async (req, res) => {
     const { project_type, project_title, project_name, developer, community, describtion, link, folder_id, city, assets_feed  } = req.body;
-
+   
     // Validate the required fields
     if (!project_type || !project_title || !project_name || !developer || !describtion || !community || !folder_id || !link ||!city) {
        
@@ -149,7 +149,8 @@ const create_myfeeds = asyncHandler(async (req, res) => {
 
 const save_letter_myfeeds = asyncHandler(async (req, res) => {
     const { project_type, project_title, project_name, developer, community, describtion, link, folder_id, city, assets_feed } = req.body;
-
+    
+    //return res.json(new ApiResponse(403, req.body, "Project."));
     if(project_name){
         const Exist_Project = await MyFeeds.findOne({where:{
             project: project_name
@@ -165,7 +166,7 @@ const save_letter_myfeeds = asyncHandler(async (req, res) => {
             message: "You can only upload from one source, either 'mylibrary' or local files, not both."
         });
     }
-    const folderId = parseInt(folder_id, 10);
+    //const folderId = parseInt(folder_id, 10);
     // Create a single feed
     const feed = await MyFeeds.create({
         source_type: project_type,
@@ -197,7 +198,7 @@ const save_letter_myfeeds = asyncHandler(async (req, res) => {
                     path: parsedAsset.path,
                     filename: parsedAsset.filename,
                     size: parsedAsset.size,
-                    folderId: folderId,
+                    folderId: folder_id,
                     feedId: feed.id,
                     type: parsedAsset.type // Dynamically determine if it's an image or video
                 };
@@ -218,7 +219,7 @@ const save_letter_myfeeds = asyncHandler(async (req, res) => {
                 path: image.path,
                 filename: image.filename.split('-').slice(1).join('-'), // Correct filename parsing
                 size: image.size,
-                folderId: folderId,
+                folderId: folder_id,
                 feedId: feed.id,
                 type: fileType 
             };
@@ -228,11 +229,11 @@ const save_letter_myfeeds = asyncHandler(async (req, res) => {
     }else {
         await Assect_Feed.create({
             title: project_title,
-            path: '', // Empty path since no file is provided
-            filename: '',
+            path: null, // Empty path since no file is provided
+            filename: null,
             size: 0, // 0 size indicating no file
-            type: '',
-            folderId: folderId,
+            type: null,
+            folderId: folder_id,
             feedId: feed.id
         });
     }
@@ -1402,7 +1403,7 @@ const CreateLikesFeed = asyncHandler(async (req, res) => {
 const save_letter_myhighlight = asyncHandler(async (req, res) => {
     const { project_title, project_name, developer, community, city, link, folder_id, assets_feed } = req.body;
  
-     
+    //return res.json(new ApiResponse(403,req.body, "Project ."));
      //const folderId = parseInt(folder_id, 10);
      if(project_name){
         const Exist_Project = await MyHighlight.findOne({where:{
@@ -1481,13 +1482,14 @@ const save_letter_myhighlight = asyncHandler(async (req, res) => {
         // Handle case where no files or assets_feed are provided
         await Assect_Highlight.create({
             title: project_title,
-            path: '',
-            filename: '',
-            size: '',
-            type: '',
-            folderId: folder_id,
-            highlightId: highlight.id
+            path: null,
+            filename: null,
+            size: null,
+            type: null,
+            folderId: folder_id ? parseInt(folder_id, 10) : null,  // Ensure folder_id is either an integer or null
+            highlightId: highlight.id || null  // Ensure highlightId is set or null
         });
+        
     }
 
 
