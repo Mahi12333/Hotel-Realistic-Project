@@ -37,7 +37,7 @@ import Assect_Highlight from "./assect_highlight.js";
 import UserShares from "./shareModel.js";
 import Common_project from "./common_projectModel.js";
 import HighlightLikes from "./assect_highlight_likeModel.js";
-import HighlightShare from "./assect_highlight_share.Model.js";
+import HighlightShare from "./assect_highlight_shareModel.js";
 
 ProjectAmenity.belongsTo(Amenity);
 Amenity.hasMany(ProjectAmenity);

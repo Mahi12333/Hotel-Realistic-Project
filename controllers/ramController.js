@@ -825,7 +825,6 @@ const deleteFeed = asyncHandler(async (req, res) => {
 
 
 
-
 const Create_folder=asyncHandler(async(req,res)=>{
     const { name } = req.body;
 
@@ -1276,9 +1275,9 @@ const CreateLikesFeed = asyncHandler(async (req, res) => {
     }
     const [existingLike, likeCount] = await Promise.all([
       UserLikes.findOne({
-        where: { user_id: userId, pid: feedsId, type: "feeds" },
+        where: { user_id: userId, feedId: feedsId, type: "feeds" },
       }),
-      UserLikes.count({ where: { pid: feedsId, type: "feeds" } }),
+      UserLikes.count({ where: { feedId: feedsId, type: "feeds" } }),
     ]);
   
     if (method === "fetch") {
@@ -1288,12 +1287,12 @@ const CreateLikesFeed = asyncHandler(async (req, res) => {
     } else {
       if (existingLike) {
         await UserLikes.destroy({
-          where: { user_id: userId, pid: feedsId, type: "feeds" },
+          where: { user_id: userId, feedId: feedsId, type: "feeds" },
         });
         const newLikeCount = likeCount - 1; // Decrement like count
         return res.json(new ApiResponse(200, newLikeCount, "false"));
       } else {
-        await UserLikes.create({ user_id: userId, pid: feedsId, type: "feeds" });
+        await UserLikes.create({ user_id: userId, feedsId: feedsId, type: "feeds" });
         const newLikeCount = likeCount + 1; // Increment like count
         return res.json(new ApiResponse(200, newLikeCount, "true"));
       }
@@ -1351,9 +1350,7 @@ const CreateLikesFeed = asyncHandler(async (req, res) => {
         if (normalizedAssetsFeed.length > 0) {
             const parsedAssets = normalizedAssetsFeed.map(asset => {
                 const parsedAsset = typeof asset === 'string' ? JSON.parse(asset) : asset;
-                // const fileType = parsedAsset.mimetype && parsedAsset.mimetype.startsWith('image/') ? 'image' :
-                //                  parsedAsset.mimetype && parsedAsset.mimetype.startsWith('video/') ? 'video' : 
-                //                  'unknown'; 
+                
 
                 return {
                     title: project_title,
@@ -1403,8 +1400,6 @@ const CreateLikesFeed = asyncHandler(async (req, res) => {
 const save_letter_myhighlight = asyncHandler(async (req, res) => {
     const { project_title, project_name, developer, community, city, link, folder_id, assets_feed } = req.body;
  
-    //return res.json(new ApiResponse(403,req.body, "Project ."));
-     //const folderId = parseInt(folder_id, 10);
      if(project_name){
         const Exist_Project = await MyHighlight.findOne({where:{
             project: project_name
@@ -1459,10 +1454,7 @@ const save_letter_myhighlight = asyncHandler(async (req, res) => {
         if (normalizedAssetsFeed.length > 0) {
             const parsedAssets = normalizedAssetsFeed.map(asset => {
                 const parsedAsset = typeof asset === 'string' ? JSON.parse(asset) : asset;
-                // const fileType = parsedAsset.mimetype && parsedAsset.mimetype.startsWith('image/') ? 'image' :
-                //                  parsedAsset.mimetype && parsedAsset.mimetype.startsWith('video/') ? 'video' : 
-                //                  'unknown'; 
-
+               
                 return {
                     title: project_title,
                     path: parsedAsset.path,
@@ -1933,7 +1925,7 @@ const Publish_Feeds = asyncHandler(async (req, res) => {
             isLiked = !!userLike;  // true if the user has liked the feed
 
             const userShare = await UserShares.findOne({
-                where: { pid: feedId, user_id: user_id, type: 'feeds' }
+                where: { feedId: feed_id , user_id: user_id, type: 'feeds' }
             });
             isShared = !!userShare;  // true if the user has shared the feed
         }
@@ -2004,37 +1996,34 @@ const Add_ShareHighlight = asyncHandler(async (req, res) => {
 
 
   const Add_ShareFeeds = asyncHandler(async (req, res) => {
-    const { feedtId, userId, method } = req.body;
+    const { feedId, userId, asset_feedsId } = req.body;
   
     if (!userId) {
       return res.json(new ApiResponse(403, null, "User ID Mandatory."));
     }
-    if (!feedtId) {
+    if (!feedId) {
       return res.json(new ApiResponse(403, null, "Project ID Mandatory."));
     }
-    const [existingShare, likeShare] = await Promise.all([
-      UserShares.findOne({
-        where: { user_id: userId, pid: feedtId, type: "feeds" },
-      }),
-      UserShares.count({ where: { pid: feedtId, type: "feeds" } }),
-    ]);
-  
-    if (method === "fetch") {
-      return res.json(
-        new ApiResponse(200, likeShare, existingShare ? "true" : "false")
-      );
-    } else {
-      if (existingShare) {
-        await UserShares.destroy({
-          where: { user_id: userId, pid: feedtId, type: "feeds" },
+    try {
+        // Increment share count
+        await UserShares.create({
+            user_id: userId,
+            pid: asset_feedsId,
+            feedId: feedId,
+            type: "feeds"
         });
-        const newShareCount = likeShare - 1; // Decrement like count
-        return res.json(new ApiResponse(200, newShareCount, "false"));
-      } else {
-        await UserLikes.create({ user_id: userId, pid: feedtId, type: "feeds" });
-        const newShareCount = likeShare + 1; // Increment like count
-        return res.json(new ApiResponse(200, newShareCount, "true"));
-      }
+
+        // Count the total shares for this highlight
+       /* const shareCount = await UserShares.count({
+            where: { pid: asset_feedsId, feedId: feedId, type: "feeds" }
+        }); */
+        const shareCount = await UserShares.count({
+            where: { feedId: feedId, type: "feeds" }
+        }); 
+
+        return res.json(new ApiResponse(200, shareCount, "Share successful"));
+    } catch (error) {
+        return res.json(new ApiResponse(500, null, "Error in sharing"));
     }
   });
 
