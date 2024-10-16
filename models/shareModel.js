@@ -28,7 +28,7 @@ const UserShares = sequelize.define('UserShares', {
 },
     {
         tableName: 'tbl_shares',
-        timestamps: false, // Set to true if you want Sequelize to automatically manage createdAt and updatedAt columns
+        timestamps: true, // Set to true if you want Sequelize to automatically manage createdAt and updatedAt columns
     }
 );
 

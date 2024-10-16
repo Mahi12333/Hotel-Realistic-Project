@@ -38,6 +38,7 @@ import UserShares from "./shareModel.js";
 import Common_project from "./common_projectModel.js";
 import HighlightLikes from "./assect_highlight_likeModel.js";
 import HighlightShare from "./assect_highlight_shareModel.js";
+import StoryView from "./StoryViewModel.js";
 
 ProjectAmenity.belongsTo(Amenity);
 Amenity.hasMany(ProjectAmenity);
@@ -133,7 +134,8 @@ export  {
     UserShares,
     Common_project,
     HighlightLikes,
-    HighlightShare
+    HighlightShare,
+    StoryView
 }
 
 

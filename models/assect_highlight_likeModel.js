@@ -31,7 +31,7 @@ const HighlightLikes = sequelize.define('HighlightLikes', {
 },
     {
         tableName: 'tbl_assect_hightlikes',
-        timestamps: false, // Set to true if you want Sequelize to automatically manage createdAt and updatedAt columns
+        timestamps: true, // Set to true if you want Sequelize to automatically manage createdAt and updatedAt columns
     }
 );
 

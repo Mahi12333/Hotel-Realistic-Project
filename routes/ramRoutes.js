@@ -1,6 +1,6 @@
 import express from "express"
 
-import { getHomeBannerSlider, homeBannerSliders, Create_folder, file_upload_folder, Get_folder, Get_file, Delete_folder, Delete_file, create_myfeeds, save_letter_myfeeds, getFeedDetails_byid, deleteFeed, updatedFeed, Preview_folder_byId, updated_folder, CreateLikesFeed, create_myheighlight, save_letter_myhighlight, get_highLightDetails_byid, deleteHighlight, updatedHighlight, AddLikesHighlight, Publish_Highlight, feedsActivate, highlightActivate, Publish_Feeds, Add_ShareFeeds, Add_ShareHighlight, detailsImage, updatedimagefile, ActivefetchFeeds_highlight, InActivefetchFeeds_highlight, Draft_fetchFeeds_highlight, GetMyFeedsCount_highlight } from "../controllers/ramController.js";
+import { getHomeBannerSlider, homeBannerSliders, Create_folder, file_upload_folder, Get_folder, Get_file, Delete_folder, Delete_file, create_myfeeds, save_letter_myfeeds, getFeedDetails_byid, deleteFeed, updatedFeed, Preview_folder_byId, updated_folder, CreateLikesFeed, create_myheighlight, save_letter_myhighlight, get_highLightDetails_byid, deleteHighlight, updatedHighlight, AddLikesHighlight, Publish_Highlight, feedsActivate, highlightActivate, Publish_Feeds, Add_ShareFeeds, Add_ShareHighlight, detailsImage, updatedimagefile, ActivefetchFeeds_highlight, InActivefetchFeeds_highlight, Draft_fetchFeeds_highlight, GetMyFeedsCount_highlight, publish_getFeedDetails_byid, publish_get_highLightDetails_byid, searchFeeds, trackView } from "../controllers/ramController.js";
 
 import { protect } from "../middleware/authMiddleware.js";
 import multer from "multer";
@@ -112,8 +112,8 @@ router.post('/highlight_details_byid', get_highLightDetails_byid);
 router.delete('/deletehighlights', deleteHighlight);  
 router.put('/updatedhighlight',upload.array('assets_feed'), updatedHighlight);
 router.post('/likes-highlight', AddLikesHighlight);//
-router.get('/publish-highlight',Publish_Highlight);//
-router.get('/publish-feed',Publish_Feeds);
+router.post('/publish-highlight',Publish_Highlight);//
+router.post('/publish-feed',Publish_Feeds);
 router.post('/ac-feed-change', feedsActivate);
 router.post('/ac-highlight-change', highlightActivate);
 router.post('/share-feed', Add_ShareFeeds);
@@ -122,4 +122,8 @@ router.post('/detailsImage', detailsImage);
 router.put('/updatedimagefile', updatedimagefile);
 router.post('/common-project', upload.single('images'), Addcommonproject);
 router.get('/common-project', get_commonproject);
+router.post('/publish_Feed_byid', publish_getFeedDetails_byid);
+router.post('/publish_highLight_byid',publish_get_highLightDetails_byid);
+// router.post('/searchFeeds', searchFeeds);
+router.post('/status-View', trackView);
 export default router;

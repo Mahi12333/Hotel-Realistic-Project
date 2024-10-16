@@ -41,6 +41,11 @@ const MyHighlight = sequelize.define('MyHighlight', {
         type: DataTypes.STRING,
         allowNull: true,
         defaultValue:0
+    },
+    slug:{
+        type: DataTypes.STRING,
+        allowNull: true,
+        defaultValue: null
     }
 },
     {

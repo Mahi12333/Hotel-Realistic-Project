@@ -37,6 +37,10 @@ const MyFeeds = sequelize.define('MyFeeds', {
         type: DataTypes.STRING,
         allowNull: true
     },
+    describtion2:{
+        type: DataTypes.STRING,
+        allowNull: true
+    },
     city:{
         type: DataTypes.STRING,
         allowNull: true
@@ -50,6 +54,11 @@ const MyFeeds = sequelize.define('MyFeeds', {
         type: DataTypes.STRING,
         allowNull: true,
         defaultValue:0
+    },
+    slug:{
+        type: DataTypes.STRING,
+        allowNull: true,
+        defaultValue: null
     }
 },
     {

@@ -31,7 +31,7 @@ const HighlightShare = sequelize.define('HighlightShare', {
 },
     {
         tableName: 'tbl_assect_hightshare',
-        timestamps: false, // Set to true if you want Sequelize to automatically manage createdAt and updatedAt columns
+        timestamps: true, // Set to true if you want Sequelize to automatically manage createdAt and updatedAt columns
     }
 );
 

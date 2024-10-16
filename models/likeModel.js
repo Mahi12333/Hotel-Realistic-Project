@@ -14,7 +14,8 @@ const UserLikes = sequelize.define('UserLikes', {
     },
     pid:{
         type: DataTypes.INTEGER,
-        allowNull: false
+        allowNull: true,
+        defaultValue: null,
     },
     feedId:{
         type: DataTypes.INTEGER,
@@ -28,11 +29,11 @@ const UserLikes = sequelize.define('UserLikes', {
 },
     {
         tableName: 'tbl_likes',
-        timestamps: false, // Set to true if you want Sequelize to automatically manage createdAt and updatedAt columns
+        timestamps: true, // Set to true if you want Sequelize to automatically manage createdAt and updatedAt columns
     }
 );
 
 // UserLikes.sync();
 // UserLikes.sync({ alter: true });
-
+// UserLikes.sync({ force: false}); 
 export default UserLikes
