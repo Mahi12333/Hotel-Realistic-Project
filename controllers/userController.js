@@ -1173,6 +1173,138 @@ const Addcommonproject=asyncHandler(async (req, res) => {
     
     
   });
+  
+  const SCOPES = [
+    "https://www.googleapis.com/auth/userinfo.email",
+    "https://www.googleapis.com/auth/firebase.messaging",
+  ];
+  
+  async function getAccessToken_notofication() {
+    try {
+      const key = JSON.parse(
+        await readFile(
+          new URL(
+            "../services_file/fir-series-7ed2f-5b13374e1072.json",
+            import.meta.url
+          )
+        )
+      );
+  
+      // Create a JWT client
+      const jwtClient = new google.auth.JWT(
+        key.client_email,
+        null,
+        key.private_key.replace(/\\n/g, "\n"), // Ensure newlines are correct in private key
+        SCOPES,
+        null
+      );
+  
+      // Authorize the client and retrieve the access token
+      const tokens = await jwtClient.authorize();
+      //   console.log('Access Token:', tokens.access_token);
+      return tokens.access_token;
+    } catch (err) {
+      console.error("Error fetching access token:", err.message);
+      console.error("Stack Trace:", err.stack); // Provide stack trace for debugging
+      throw err;
+    }
+  }
+  
+  
+  
+  //! Function to send a message using FCM API
+  async function send_notification_Message({ title, body, each_device,action }) {
+    
+        // Get the access token
+        const accessToken = await getAccessToken_notofication();
+        // Fetch device tokens for unread notifications
+        const deviceTokens = await Device_token.findOne({
+         where:{device_token:each_device.device_token}
+        });
+  
+        // Define the message payload
+        const messagePayload = {
+          message: {
+            token: deviceTokens.device_token,
+            notification: {
+              title: title || "The Lukan",
+              body: "New Property Added",
+            },
+            data: { story_id: body.id },
+            android: {
+              notification: {
+                title: title || "New Content!",
+                body: body || "A new video has been uploaded.",
+                click_action: action,
+              },
+            },
+            apns: {
+              payload: {
+                aps: { category: "NEW_MESSAGE_CATEGORY" },
+              },
+            },
+          },
+        };
+    
+        // Send the request to FCM API
+        const response = await fetch(
+          "https://fcm.googleapis.com/v1/projects/fir-series-7ed2f/messages:send",
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(messagePayload),
+          }
+        );
+    
+        const responseData = await response.json();
+        console.log("FCM Response:", responseData);
+  
+      //! If the notification was successfully sent, insert the notification into the database
+      if (responseData && responseData.name) {  // Assuming 'name' indicates success
+          await Notification.create({
+            user_email: deviceTokens.email,
+            massage: title,
+            read: false,
+            createdAt: new Date(),
+          });
+          // console.log(responseData.name,"Notification saved in the database.");
+        }  
+    }
+  
+  
+  
+    
+  
+  
+  
+    const device_token_notification = asyncHandler(async (req, res) => {
+      const { device_token, email } = req.body;
+      // console.log(req.body);
+      
+      if (!device_token || !email) {
+        return res.status(400).json(new ApiError(400, null, "Device_token and Email are required"));
+      }
+    
+      // Check if the email exists in the User table
+      const userExists = await User.findOne({ where: { email } });
+      //console.log(userExists);
+      if (userExists) {
+        // If the email exists, prepare the notification object
+        const info = await Device_token.create({
+          email: userExists.email,
+          device_token: device_token
+        });
+   
+        return res.status(201).json(new ApiResponse(201, info, "Device token successfully registered"));
+      } else {
+        return res.status(400).json(new ApiError(400, null, "Device token registration failed."));
+      }
+  });
+    
+
 
 
 

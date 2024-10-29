@@ -548,24 +548,15 @@ const ActivefetchFeeds_highlight = asyncHandler(async (req, res) => {
             offset
         });
 
-        // const totalPages = Math.ceil(totalCount / limit);
-        // return { data, pagination: { currentPage: parseInt(page), totalPages, totalItems: totalCount } };
         return {data, totalCount}
     };
 
     // Handle 'feeds' type
     if (type === 'feeds') {
-        // const { data: feeds, pagination } = await getInactiveData(MyFeeds, Assect_Feed, 'title');
+
         const { data: feeds, totalCount } = await getInactiveData(MyFeeds, Assect_Feed, 'title');
         const totalPages = Math.ceil(totalCount / limit);
  
-
-        // return res.json(new ApiResponse(200, {
-        //     feeds: {
-        //         data: feeds,
-        //         pagination
-        //     }
-        // }, "Feeds retrieved successfully."));
         
         return res.json(new ApiResponse(200, {
             feeds,
@@ -581,16 +572,9 @@ const ActivefetchFeeds_highlight = asyncHandler(async (req, res) => {
 
     // Handle 'highlight' type
     if (type === 'highlights') {
-        // const { data: highlights, pagination } = await getInactiveData(MyHighlight, Assect_Highlight, 'project_name');
+       
         const { data: highlights, totalCount } = await getInactiveData(MyHighlight, Assect_Highlight, 'title');
         const totalPages = Math.ceil(totalCount / limit);
-    //     return res.json(new ApiResponse(200, {
-    //         highlights: {
-    //             data: highlights,
-    //             pagination
-    //         }
-    //     }, "Highlights retrieved successfully."));
-    // }
 
     return res.json(new ApiResponse(200, {
         highlights,
@@ -601,8 +585,6 @@ const ActivefetchFeeds_highlight = asyncHandler(async (req, res) => {
         }
     }, "Highlights retrieved successfully."));
 }
-
-
      
 });
 
@@ -818,12 +800,10 @@ const GetMyFeedsCount_highlight = asyncHandler(async (req, res) => {
 
 const deleteFeed = asyncHandler(async (req, res) => {
     const { all_id } = req.body;
-    //console.log(all_id);
     // Check if all_id exists
     if (!all_id || !Array.isArray(all_id) || all_id.length === 0) {
         return res.json(new ApiResponse(403, null, "Feed ID(s) are required."));
     }
-    //console.log(all_id);
     // Loop through all_id without JSON.parse (assuming it's already an array)
     for (let id of all_id) {
         const feed = await MyFeeds.findOne({ where: { id: id } });
@@ -850,12 +830,8 @@ const deleteFeed = asyncHandler(async (req, res) => {
 });
 
 
-
 const Create_folder=asyncHandler(async(req,res)=>{
     const { name } = req.body;
-
-    // Log folder name for debugging
-    //console.log(name);
 
     // Validate folder name input
     if (!name) {
@@ -876,6 +852,8 @@ const Create_folder=asyncHandler(async(req,res)=>{
     // Return the response with the created folder
     return res.json(new ApiResponse(201, folder, "Folder created successfully"));
 });
+
+
 const updated_folder=asyncHandler(async(req,res)=>{
     const{folder_id,name}=req.body;
     if(!folder_id || !name){
@@ -1097,7 +1075,6 @@ const file_upload_folder= asyncHandler(async(req,res)=>{
     // Loop through each folder ID provided in the request
     for (let id of All_id_perse) {
         const folder = await Folder.findOne({ where: { id: id } });
-// console.log(folder)
         if (folder) {
         // If files are uploaded, associate them with the folder
         if (req.files && req.files.length > 0) {
@@ -1546,7 +1523,7 @@ const save_letter_myhighlight = asyncHandler(async (req, res) => {
 });
 
 const get_highLightDetails_byid = asyncHandler(async (req, res) => {
-    const { highlight_id } = req.body;
+   const { highlight_id } = req.body;
    if(!highlight_id){
     return res.json(new ApiResponse(403, null, "highlight id is required.."));
    }
@@ -2325,15 +2302,6 @@ const Add_ShareHighlight = asyncHandler(async (req, res) => {
         return `${sizeInUnits} ${unit}`;
     };
 
-    // Get image dimensions (if it's an image file)
-    /*let dimensions = null;
-    try {
-        dimensions = imageSize(file.path);  // You might need to fetch the file locally for sizeOf
-    } catch (error) {
-        console.log('Error fetching image dimensions:', error.message);
-    }*/
-
-        // Fetch the image from the remote URL to get dimensions
 
     let dimensions = null;
     try {
@@ -2423,7 +2391,7 @@ const updatedimagefile = asyncHandler(async (req, res) => {
     }, "Filename updated successfully."));
 });
 
-const Publish_Highlight = asyncHandler(async (req, res) => {
+const Publish_Highlights = asyncHandler(async (req, res) => {
     const { userId } = req.body; // Logged-in user's ID (optional)
 
     // Fetch published highlights with associated data
@@ -2495,6 +2463,201 @@ const Publish_Highlight = asyncHandler(async (req, res) => {
         };
     }));
 
+    return res.json(new ApiResponse(200, response, "Highlights retrieved successfully."));
+});
+
+
+const Publish_Highlightss = asyncHandler(async (req, res) => {
+    const { userId } = req.body; // Logged-in user's ID (optional)
+
+    // Fetch published highlights with associated data
+    const highlights = await MyHighlight.findAll({
+        where: { 
+            status: '1',
+            is_publish: '1'
+        },
+        attributes: ['id', 'title', 'project', 'developer', 'community', 'city', 'link', 'slug'],
+        include: [{
+            model: Assect_Highlight,
+            attributes: ['id', 'title', 'path', 'filename', 'type'],
+            include: [{
+                model: Folder,
+                attributes: ['id', 'name']
+            }]
+        }]
+    });
+
+    // Processing each highlight
+    const response = await Promise.all(highlights.map(async highlight => {
+        const highlightData = highlight.toJSON();
+
+        let isViewedFullStory = true; // Start assuming the full story is viewed
+
+        // Process each Assect_Highlight
+        const assets = await Promise.all(highlightData.Assect_Highlights.map(async asset => {
+            // Fetch likes and shares regardless of userId
+            const likes = await HighlightLikes.findAll({
+                where: { pid: asset.id }
+            });
+            const shares = await HighlightShare.findAll({
+                where: { pid: asset.id }
+            });
+
+            // Initialize asset response object with total counts
+            const assetResponse = {
+                ...asset,
+                totalLikes: likes.length, // Count total likes
+                totalShares: shares.length, // Count total shares
+                isLiked: false, 
+                isShared: false, 
+                isViewed: false // Default value
+            };
+
+            // If `userId` is provided, fetch user-specific data (likes, shares, views)
+            if (userId) {
+                // Check if the user has viewed the story
+                const storyView = await StoryView.findOne({
+                    where: { 
+                        storyId: asset.id, 
+                        userId, 
+                        highlightId: highlightData.id 
+                    }
+                });
+                const isViewed = !!storyView; // Check if the story has been viewed
+                assetResponse.isViewed = isViewed; // Update the isViewed status for this asset
+
+                // Check if the user has liked or shared the asset
+                const isLiked = likes.some(like => like.user_id === userId);
+                const isShared = shares.some(share => share.user_id === userId);
+
+                // Add user-specific data to the asset response
+                assetResponse.isLiked = isLiked;
+                assetResponse.isShared = isShared;
+            }
+
+            // If any asset is not viewed, set isViewedFullStory to false
+            if (!assetResponse.isViewed) {
+                isViewedFullStory = false;
+            }
+
+            return assetResponse; // Return the processed asset
+        }));
+
+        return {
+            ...highlightData,
+            Assect_Highlights: assets,
+            isViewedFullStory // Add this field to highlight data
+        };
+    }));
+
+    // Return the processed response
+    return res.json(new ApiResponse(200, response, "Highlights retrieved successfully."));
+});
+
+ const Publish_Highlight = asyncHandler(async (req, res) => {
+    const { userId } = req.body; // Logged-in user's ID (optional)
+
+    // Fetch published highlights with associated data
+    const highlights = await MyHighlight.findAll({
+        where: { 
+            status: '1',
+            is_publish: '1'
+        },
+        attributes: ['id', 'title', 'project', 'developer', 'community', 'city', 'link', 'slug'],
+        include: [{
+            model: Assect_Highlight,
+            attributes: ['id', 'title', 'path', 'filename', 'type'],
+            include: [{
+                model: Folder,
+                attributes: ['id', 'name']
+            }]
+        }]
+    });
+
+    const highlightIds = highlights.map(h => h.id);
+    const assetIds = highlights.flatMap(h => h.Assect_Highlights.map(a => a.id));
+
+    // Batch fetching likes and shares counts for all assets in one query
+    const likesCounts = await HighlightLikes.findAll({
+        attributes: ['pid', [sequelize.fn('COUNT', sequelize.col('pid')), 'totalLikes']],
+        where: { pid: assetIds },
+        group: ['pid']
+    });
+
+    const sharesCounts = await HighlightShare.findAll({
+        attributes: ['pid', [sequelize.fn('COUNT', sequelize.col('pid')), 'totalShares']],
+        where: { pid: assetIds },
+        group: ['pid']
+    });
+
+    // Create a map for easy access to likes and shares counts by pid
+    const likesMap = likesCounts.reduce((acc, like) => {
+        acc[like.pid] = like.getDataValue('totalLikes');
+        return acc;
+    }, {});
+
+    const sharesMap = sharesCounts.reduce((acc, share) => {
+        acc[share.pid] = share.getDataValue('totalShares');
+        return acc;
+    }, {});
+
+    // If userId is provided, fetch all story views for user and all assets in one query
+    let storyViewsMap = {};
+    if (userId) {
+        const storyViews = await StoryView.findAll({
+            where: { 
+                userId,
+                highlightId: highlightIds
+            }
+        });
+
+        storyViewsMap = storyViews.reduce((acc, view) => {
+            acc[`${view.storyId}-${view.highlightId}`] = true;
+            return acc;
+        }, {});
+    }
+
+    // Process each highlight
+    const response = highlights.map(highlight => {
+        const highlightData = highlight.toJSON();
+        let isViewedFullStory = true; // Start assuming the full story is viewed
+
+        // Process each Assect_Highlight
+        const assets = highlightData.Assect_Highlights.map(asset => {
+            const assetResponse = {
+                ...asset,
+                totalLikes: likesMap[asset.id] || 0, // Get total likes from the map
+                totalShares: sharesMap[asset.id] || 0, // Get total shares from the map
+                isLiked: false,
+                isShared: false,
+                isViewed: false
+            };
+
+            // If `userId` is provided, set user-specific data
+            if (userId) {
+                const isViewed = !!storyViewsMap[`${asset.id}-${highlightData.id}`];
+                assetResponse.isViewed = isViewed;
+
+                // If any asset is not viewed, set isViewedFullStory to false
+                if (!isViewed) {
+                    isViewedFullStory = false;
+                }
+            } else {
+                // If no userId, set isViewedFullStory to false (no user views)
+                isViewedFullStory = false;
+            }
+
+            return assetResponse;
+        });
+
+        return {
+            ...highlightData,
+            Assect_Highlights: assets,
+            isViewedFullStory
+        };
+    });
+
+    // Return the processed response
     return res.json(new ApiResponse(200, response, "Highlights retrieved successfully."));
 });
 
